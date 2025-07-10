@@ -22,6 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
       final countryProvider = Provider.of<CountryProvider>(context, listen: false);
       countryProvider.loadCountries();
       countryProvider.loadAirlines();
+      countryProvider.loadAirport();
     });
     init();
   }

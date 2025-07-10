@@ -1,7 +1,3 @@
-
-
-
-
 import 'app_configs.dart';
 
 final String apiBaseUrl = AppConfigs.baseUrl;
@@ -15,9 +11,6 @@ String countryUrl2 = '${apiBaseUrl2}request.php';
 
 
 String flightSearch = '${apiBaseUrl}request.php';
-
-
-
 
 
 ////Group Booking
