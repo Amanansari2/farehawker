@@ -5,12 +5,14 @@
 import 'app_configs.dart';
 
 final String apiBaseUrl = AppConfigs.baseUrl;
+final String apiBaseUrl2 = AppConfigs.baseUrl2;
 
 //---------------->>>>>>>>>>>>>>>>
 //Auth
 // String authUrl = '${apiBaseUrl}Login';
 
-String countryUrl = 'http://farehawker.co.uk/api/countries';
+String countryUrl2 = '${apiBaseUrl2}request.php';
+
 
 String flightSearch = '${apiBaseUrl}request.php';
 

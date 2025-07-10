@@ -19,7 +19,7 @@ import 'generated/l10n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init('authBox');
+  await GetStorage.init();
   // AppLogger.log("🔥 AppLogger is working");
   // final auth = AuthRepository();
   // await auth.loginIfNeeded();

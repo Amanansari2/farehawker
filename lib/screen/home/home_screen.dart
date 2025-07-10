@@ -1215,14 +1215,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       child: ListTile(
         onTap: () async {
-          final overlay = Overlay.of(context);
-          final entry = OverlayEntry(
-              builder: (_) => const FlightTakeoffAnimation());
-          overlay.insert(entry);
-          await Future.delayed(const Duration(milliseconds: 800));
           final response = await Navigator.pushNamed(
-              context, AppRoutes.search, arguments: cp.countries);
-          entry.remove();
+              context, AppRoutes.search,);
+
           if (response is City) onSelected(response);
         },
         title: Text(city?.cityCode != null ? '(${city!.cityCode})' : '---',

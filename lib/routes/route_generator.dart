@@ -9,7 +9,6 @@ import 'package:flightbooking/screen/search/search.dart';
 import 'package:flightbooking/screen/search/search_result.dart';
 import 'package:flutter/material.dart';
 
-import '../models/flight_response_model.dart';
 import '../screen/profile/profile_screen.dart';
 
 class AppRoutes {
@@ -43,12 +42,7 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const NotificationSc());
 
       case AppRoutes.search:
-        final args = settings.arguments as List<City>;
-        return PageRouteBuilder(
-            pageBuilder: (_,__,___) => Search(cities: args),
-            transitionDuration: Duration.zero,
-            reverseTransitionDuration: Duration.zero
-        );
+        return MaterialPageRoute(builder: (_) => const Search());
 
       case AppRoutes.searchResult:
         final args = settings.arguments as SearchResultArguments;

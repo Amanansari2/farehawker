@@ -21,21 +21,12 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.microtask((){
       final countryProvider = Provider.of<CountryProvider>(context, listen: false);
       countryProvider.loadCountries();
+      countryProvider.loadAirlines();
     });
     init();
   }
 
-  // Future<void> init() async {
-  //   await Future.delayed(const Duration(seconds: 2)).then(
-  //     (value) =>
-  //        
-      //     Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (BuildContext context) => const OnBoard()),
-      // ),
-  //   );
-  // }
-  
+
   
   Future<void> init() async {
     await  Future.delayed(const Duration(seconds: 2));
