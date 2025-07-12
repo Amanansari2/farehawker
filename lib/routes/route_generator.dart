@@ -45,15 +45,19 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const Search());
 
       case AppRoutes.searchResult:
-        final args = settings.arguments as SearchResultArguments;
+        // final args = settings.arguments as SearchResultArguments;
         return MaterialPageRoute(builder: (_) => SearchResult(
-            flightResponse: args.flightResponse,
-            fromCity: args.fromCity,
-            toCity: args.toCity,
-            travelDate: args.travelDate,
-            adultCount: args.adultCount,
-            childCount: args.childCount,
-            infantCount: args.infantCount,));
+            // flightDetail: args.flightDetail,
+            // returnFlights: args.returnFlights,
+            // fromCity: args.fromCity,
+            // toCity: args.toCity,
+            // travelDate: args.travelDate,
+            // returnDate: args.returnDate,
+            // adultCount: args.adultCount,
+            // childCount: args.childCount,
+            // infantCount: args.infantCount,
+            // isRoundTrip: args.isRoundTrip,
+        ));
 
 
 

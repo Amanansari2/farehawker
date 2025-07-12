@@ -57,34 +57,25 @@ class PostService {
       );
 
       LoggerService.logDioResponse(response);
+      return json.decode(response.data);
 
-      try {
-        return json.decode(response.data);
-      } catch (e) {
-        LoggerService.logWarning("Response is not valid JSON: ${response.data}");
-        return {
-          'error': 'Invalid JSON format',
-          'raw': response.data,
-          'status': response.statusCode
-        };
-      }
-    } on DioException catch (e) {
-      final statusCode = e.response?.statusCode ?? 500;
-      final errorData = e.response?.data ?? e.message;
-
-      AppLogger.log("DIO EXCEPTION STATUS -->> $statusCode");
-      AppLogger.log("DIO EXCEPTION DATA -->> $errorData");
-      return {
-        'status':statusCode,
-        'error': errorData,
-      };
-    } catch (e) {
-      LoggerService.logWarning("Unexpected Error --->>> $e");
-      return {
-        'status': 500,
-        'error': 'Unexpected error occurred',
-      };
     }
+
+    catch (e) {
+      final res = (e is DioException) ? e.response : null;
+      final status = res?.statusCode ?? 500;
+      final raw = res?.data;
+
+      AppLogger.log("ERROR Code -->> $status");
+      AppLogger.log("Error Data -->> $raw");
+
+      return json.decode(raw);
+    }
+
+
+
   }
 
 }
+
+

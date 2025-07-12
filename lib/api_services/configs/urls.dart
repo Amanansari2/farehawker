@@ -10,7 +10,7 @@ final String apiBaseUrl2 = AppConfigs.baseUrl2;
 String countryUrl2 = '${apiBaseUrl2}request.php';
 
 
-String flightSearch = '${apiBaseUrl}request.php';
+String flightSearch = '${apiBaseUrl2}request.php';
 
 
 ////Group Booking

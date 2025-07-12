@@ -8,6 +8,7 @@ import '../models/country_list_model.dart';
 
 class CountryProvider extends ChangeNotifier{
   late  final CountryRepository _countryRepository;
+
   CountryProvider(this._countryRepository);
 
   List<City> _countries =[];

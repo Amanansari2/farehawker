@@ -1,3 +1,4 @@
+import 'package:flightbooking/api_services/app_logger.dart';
 import 'package:flightbooking/providers/search_flight_provider.dart';
 import 'package:flightbooking/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
@@ -1061,6 +1062,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               _buildFromToInput(provider, context),
                               const SizedBox(height: 20),
                               _buildDateInput(provider, context),
+
+                              if (provider.selectedTripIndex == 1) ...[
+                                const SizedBox(height: 20),
+                                _buildReturnDateInput(provider, context),
+                              ],
                               const SizedBox(height: 20),
                               _buildPassengerField(provider, context),
                               const SizedBox(height: 20),
@@ -1163,9 +1169,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           onTap: (index) {
-            setState(() {
-              selectedIndex = index;
-            });
+            provider.setTripIndex(index);
           },
           tabs: [
             Tab(text: lang.S
@@ -1281,6 +1285,54 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       },
     );
   }
+
+  Widget _buildReturnDateInput(SearchFlightProvider provider, BuildContext context) {
+    return TextFormField(
+      readOnly: true,
+      keyboardType: TextInputType.name,
+      cursorColor: kTitleColor,
+      showCursor: false,
+      textInputAction: TextInputAction.next,
+      decoration: kInputDecoration.copyWith(
+        labelText: lang.S.of(context).returnDate,
+        labelStyle: kTextStyle.copyWith(color: kTitleColor),
+        hintText: provider.returnDateTitle,
+        hintStyle: kTextStyle.copyWith(color: kTitleColor),
+        focusColor: kTitleColor,
+        border: const OutlineInputBorder(),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        suffixIcon: const Icon(IconlyLight.calendar, color: kSubTitleColor),
+      ),
+      onTap: () async {
+        final dt = await showDatePicker(
+          context: context,
+          initialDate: provider.returnDate ?? provider.selectedDate.add(const Duration(days: 1)),
+          firstDate: provider.selectedDate,
+          lastDate: DateTime(2040),
+        );
+        if (dt != null) {
+          final isValid = provider.setReturnDate(dt);
+          if (!isValid) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return CustomDialogBox(
+                  title: "Invalid Return Date",
+                  descriptions: provider.validationMessage,
+                  text: "OK",
+                  titleColor: Colors.red,
+                  img: 'images/dialog_error.png',
+                  functionCall: () => Navigator.pop(context),
+                );
+              },
+            );
+          }
+        }
+      },
+    );
+  }
+
+
 
   Widget _buildPassengerField(SearchFlightProvider provider,
       BuildContext context) {
@@ -1417,31 +1469,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
           );
         } else if (provider.error != null) {
+
           showDialog(
             context: context,
             builder: (_) =>
                 CustomDialogBox(
                   title: 'Error',
-                  descriptions: provider.error!,
+                  descriptions: provider.error,
                   text: 'Retry',
                   titleColor: kRedColor,
                   img: 'images/dialog_error.png',
                   functionCall: () => Navigator.of(context).pop(),
                 ),
           );
-        } else if (provider.result != null) {
+        } else if (provider.onwardFlights.isNotEmpty) {
           Navigator.pushNamed(
             context,
-            AppRoutes.searchResult,
-              arguments: SearchResultArguments(
-                flightResponse: provider.result!,
-                fromCity: provider.fromCity?.city ?? '',
-                toCity: provider.toCity?.city ?? '',
-                travelDate: provider.selectedDate,
-                adultCount: provider.adultCount,
-                childCount: provider.childCount,
-                infantCount: provider.infantCount,
-              ),);
+            AppRoutes.searchResult,);
+              // arguments: SearchResultArguments(
+              //   flightDetail: provider.onwardFlights,
+              //   returnFlights:provider.returnFlights ,
+              //   isRoundTrip: provider.selectedTripIndex == 1,
+              //   fromCity: provider.fromCity?.city ?? '',
+              //   toCity: provider.toCity?.city ?? '',
+              //   travelDate: provider.selectedDate,
+              //   returnDate: provider.returnDate,
+              //   adultCount: provider.adultCount,
+              //   childCount: provider.childCount,
+              //   infantCount: provider.infantCount,
+              // ),);
         }
       },
     );

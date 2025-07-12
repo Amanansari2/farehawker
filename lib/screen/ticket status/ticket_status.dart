@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -155,7 +155,7 @@ class _TicketStatusState extends State<TicketStatus> {
                             style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12.0),
                           ),
                           Text(
-                            'Booking on - Wed, 09 Feb 2023 - 14:27',
+                            'Booking on - Fri, 08 Jul 2025 - 14:27',
                             style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12.0),
                           ),
                         ],
@@ -198,15 +198,15 @@ class _TicketStatusState extends State<TicketStatus> {
                                 width: 24.0,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  image: DecorationImage(image: AssetImage('images/indigo.png'), fit: BoxFit.cover),
+                                  image: DecorationImage(image: AssetImage('images/logo/AF.png'), fit: BoxFit.cover),
                                 ),
                               ),
                               title: Text(
-                                'IndiGo',
+                                'Air France',
                                 style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
                               ),
                               subtitle: Text(
-                                '6E-376',
+                                'AF | 217',
                                 style: kTextStyle.copyWith(color: kSubTitleColor),
                               ),
                             ),
@@ -223,24 +223,28 @@ class _TicketStatusState extends State<TicketStatus> {
                                   Row(
                                     children: [
                                       Text(
-                                        'DAC',
+                                        'BOM',
                                         style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                       const SizedBox(width: 5.0),
                                       Text(
-                                        '15:45',
+                                        '01:20',
                                         style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    'Sun 6 Jan 2023',
+                                    'Fri, 25 Jul 2025',
                                     style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    'Terminal 3',
+                                    'Terminal T2',
+                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  ),
+                                  Text(
+                                    'Mumbai, India',
                                     style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
                                   ),
                                 ],
@@ -249,7 +253,7 @@ class _TicketStatusState extends State<TicketStatus> {
                               Column(
                                 children: [
                                   Text(
-                                    '3h 40m',
+                                    '09h 35m',
                                     style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
                                   ),
                                   const SizedBox(height: 2.0),
@@ -296,10 +300,10 @@ class _TicketStatusState extends State<TicketStatus> {
                                     ],
                                   ),
                                   const SizedBox(height: 2.0),
-                                  Text(
-                                    'Economy',
-                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
-                                  ),
+                                  // Text(
+                                  //   'First Class',
+                                  //   style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  // ),
                                 ],
                               ),
                               const SizedBox(width: 5.0),
@@ -309,24 +313,28 @@ class _TicketStatusState extends State<TicketStatus> {
                                   Row(
                                     children: [
                                       Text(
-                                        'DAC',
+                                        'PAR',
                                         style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                       const SizedBox(width: 5.0),
                                       Text(
-                                        '15:45',
+                                        '07:25',
                                         style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    'Sun 6 Jan 2023',
+                                    'Fri, 25 Jul 2025',
                                     style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    'Terminal 3',
+                                    'Terminal T2E',
+                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  ),
+                                  Text(
+                                    'Paris, France',
                                     style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
                                   ),
                                 ],
@@ -351,7 +359,7 @@ class _TicketStatusState extends State<TicketStatus> {
                               ),
                               const Spacer(),
                               Text(
-                                'Cabin - Contact to\nAirlines:',
+                                'Cabin - 12 Kgs  \n (1 Piece x 12 Kgs)',
                                 textAlign: TextAlign.center,
                                 style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0),
                               ),
@@ -359,12 +367,223 @@ class _TicketStatusState extends State<TicketStatus> {
                               Column(
                                 children: [
                                   Text(
-                                    'Check -in 30 kgs',
+                                    'Check-in  - 23 Kgs',
                                     textAlign: TextAlign.end,
                                     style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0),
                                   ),
                                   Text(
-                                    'Checked 50 kgs',
+                                    '(1 Piece x 23 Kgs)',
+                                    textAlign: TextAlign.end,
+                                    style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10.0),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(color: kBorderColorTextField),
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ListTileTheme(
+                            contentPadding: const EdgeInsets.all(0),
+                            dense: true,
+                            horizontalTitleGap: 0.0,
+                            minLeadingWidth: 0,
+                            child: ListTile(
+                              visualDensity: const VisualDensity(vertical: -4),
+                              dense: true,
+                              horizontalTitleGap: 10.0,
+                              contentPadding: EdgeInsets.zero,
+                              leading: Container(
+                                height: 24.0,
+                                width: 24.0,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(image: AssetImage('images/logo/AF.png'), fit: BoxFit.cover),
+                                ),
+                              ),
+                              title: Text(
+                                'Air France',
+                                style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                'AF | 328',
+                                style: kTextStyle.copyWith(color: kSubTitleColor),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'PAR',
+                                        style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                      const SizedBox(width: 5.0),
+                                      Text(
+                                        '13:15',
+                                        style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5.0),
+                                  Text(
+                                    'Fri, 25 Jul 2025',
+                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  ),
+                                  const SizedBox(height: 5.0),
+                                  Text(
+                                    'Terminal T2E',
+                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  ),
+                                  Text(
+                                    'Paris, France',
+                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 5.0),
+                              Column(
+                                children: [
+                                  Text(
+                                    '07h 50m',
+                                    style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                  ),
+                                  const SizedBox(height: 2.0),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        height: 10.0,
+                                        width: 10.0,
+                                        decoration: const BoxDecoration(color: kPrimaryColor, shape: BoxShape.circle),
+                                      ),
+                                      Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Container(
+                                            height: 2.0,
+                                            width: 80,
+                                            decoration: const BoxDecoration(
+                                              color: kPrimaryColor,
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.all(5.0),
+                                            decoration: const BoxDecoration(
+                                              color: kPrimaryColor,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.arrow_right_alt_outlined,
+                                              size: 16,
+                                              color: kWhite,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(
+                                        height: 10.0,
+                                        width: 10.0,
+                                        decoration: BoxDecoration(
+                                          color: kWhite,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: kPrimaryColor),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2.0),
+                                  // Text(
+                                  //   'First Class',
+                                  //   style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  // ),
+                                ],
+                              ),
+                              const SizedBox(width: 5.0),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'YOW',
+                                        style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                      const SizedBox(width: 5.0),
+                                      Text(
+                                        '15:05',
+                                        style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5.0),
+                                  Text(
+                                    'Fri, 25 Jul 2025',
+                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  ),
+                                  const SizedBox(height: 5.0),
+                                  // Text(
+                                  //   'Terminal T2E',
+                                  //   style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  // ),
+                                  Text(
+                                    'Ottawa, Canada',
+                                    style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(5.0),
+                          decoration: const BoxDecoration(
+                            color: kSecondaryColor,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.luggage,
+                                color: kTitleColor,
+                              ),
+                              Text(
+                                'Baggage:',
+                                style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 12.0),
+                              ),
+                              const Spacer(),
+                              Text(
+                                'Cabin - 12 Kgs  \n (1 Piece x 12 Kgs)',
+                                textAlign: TextAlign.center,
+                                style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0),
+                              ),
+                              const Spacer(),
+                              Column(
+                                children: [
+                                  Text(
+                                    'Check-in  - 23 Kgs',
+                                    textAlign: TextAlign.end,
+                                    style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0),
+                                  ),
+                                  Text(
+                                    '(1 Piece x 23 Kgs)',
                                     textAlign: TextAlign.end,
                                     style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0),
                                   ),
@@ -416,7 +635,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    'Mr.Shiadul Islam',
+                                    'Ms. Aayat Sayed',
                                     style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -434,7 +653,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    'A70G26',
+                                    '9H3TQF',
                                     style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -452,7 +671,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    '999458154454',
+                                    '057-1234567890',
                                     style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -500,7 +719,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(height: 5.0),
                                   Text(
-                                    'V | Economy',
+                                    '1A | (First Class) | Window',
                                     style: kTextStyle.copyWith(color: kTitleColor, fontSize: 10.0, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -580,7 +799,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(width: 20.0),
                                   Text(
-                                    '$currencySign${13000}',
+                                    '$currencySign ${NumberFormat('#,##0').format(63170)}',
                                     style: kTextStyle.copyWith(
                                       color: kSubTitleColor,
                                     ),
@@ -596,7 +815,7 @@ class _TicketStatusState extends State<TicketStatus> {
                             Expanded(
                               flex: 3,
                               child: Text(
-                                'Taxes',
+                                'SurCharges',
                                 style: kTextStyle.copyWith(
                                   color: kSubTitleColor,
                                 ),
@@ -614,7 +833,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(width: 20.0),
                                   Text(
-                                    '$currencySign${2000}',
+                                    '$currencySign ${NumberFormat('#,##0').format(30910)}',
                                     style: kTextStyle.copyWith(
                                       color: kSubTitleColor,
                                     ),
@@ -648,7 +867,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(width: 20.0),
                                   Text(
-                                    '$currencySign${0}',
+                                    '$currencySign ${0}',
                                     style: kTextStyle.copyWith(
                                       color: kSubTitleColor,
                                     ),
@@ -682,7 +901,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(width: 20.0),
                                   Text(
-                                    '$currencySign${0}',
+                                    '$currencySign ${0}',
                                     style: kTextStyle.copyWith(
                                       color: kSubTitleColor,
                                     ),
@@ -716,7 +935,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(width: 20.0),
                                   Text(
-                                    '$currencySign${500}',
+                                    '$currencySign ${0}',
                                     style: kTextStyle.copyWith(
                                       color: kSubTitleColor,
                                     ),
@@ -748,7 +967,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                   ),
                                   const SizedBox(width: 20.0),
                                   Text(
-                                    '$currencySign${14500}',
+                                    '$currencySign ${NumberFormat('#,##0').format(94080)}',
                                     style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -778,7 +997,7 @@ class _TicketStatusState extends State<TicketStatus> {
                                 border: Border.all(color: kBorderColorTextField),
                               ),
                               child: Text(
-                                'Dhaka - Delhi',
+                                'BOM - YOW',
                                 textAlign: TextAlign.center,
                                 style: kTextStyle.copyWith(color: kTitleColor, fontSize: 12),
                               ),
