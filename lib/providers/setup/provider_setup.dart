@@ -1,4 +1,5 @@
 import 'package:flightbooking/api_services/internet_status.dart';
+import 'package:flightbooking/providers/filter_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -48,6 +49,9 @@ final List<SingleChildWidget> appProviders = [
     create: (_) => SearchFlightProvider(),
   ),
 
+  ChangeNotifierProvider<FilterProvider>(
+    create: (_) => FilterProvider(),
+  ),
 
   /// Group booking providers
   Provider<GroupBookingRepository>(

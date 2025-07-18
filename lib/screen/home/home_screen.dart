@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../models/country_list_model.dart';
 import '../../models/search_result_arguments.dart';
 import '../../providers/country_provider.dart';
+import '../../providers/filter_provider.dart';
 import '../../routes/route_generator.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
@@ -1453,7 +1454,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           .searchFlight,
       buttonDecoration: kButtonDecoration.copyWith(color: kPrimaryColor),
       onPressed: () async {
-        final success = await provider.searchFlight();
+        bool success = false;
+
+        if(provider.selectedTripIndex == 0){
+          final filterProvider = context.read<FilterProvider>();
+          final countryProvider = context.read<CountryProvider>();
+          success = await provider.searchFlight(filterProvider: filterProvider, countryProvider: countryProvider);
+        }else{
+          final filterProvider = context.read<FilterProvider>();
+          final countryProvider = context.read<CountryProvider>();
+          success = await provider.searchRoundTripFlight(initialLoad: true, filterProvider: filterProvider, countryProvider: countryProvider);
+        }
 
         if (!success && provider.validationMessage.isNotEmpty) {
           showDialog(
@@ -1482,22 +1493,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   functionCall: () => Navigator.of(context).pop(),
                 ),
           );
-        } else if (provider.onwardFlights.isNotEmpty) {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.searchResult,);
-              // arguments: SearchResultArguments(
-              //   flightDetail: provider.onwardFlights,
-              //   returnFlights:provider.returnFlights ,
-              //   isRoundTrip: provider.selectedTripIndex == 1,
-              //   fromCity: provider.fromCity?.city ?? '',
-              //   toCity: provider.toCity?.city ?? '',
-              //   travelDate: provider.selectedDate,
-              //   returnDate: provider.returnDate,
-              //   adultCount: provider.adultCount,
-              //   childCount: provider.childCount,
-              //   infantCount: provider.infantCount,
-              // ),);
+        } else {
+         if (provider.selectedTripIndex == 0 && provider.onwardFlights.isNotEmpty) {
+            Navigator.pushNamed(context, AppRoutes.searchResult,);
+          } else if(
+         provider.selectedTripIndex == 1 && (provider.onwardFlights.isNotEmpty || provider.returnFlights.isNotEmpty)){
+           Navigator.pushNamed(context, AppRoutes.searchRoundTripResult);
+         }
         }
       },
     );

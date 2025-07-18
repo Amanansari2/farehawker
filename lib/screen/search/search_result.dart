@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/airline_list_model.dart';
 import '../../models/flight_details_model.dart';
 import '../../providers/country_provider.dart';
+import '../../providers/filter_provider.dart';
 import '../../providers/search_flight_provider.dart';
 import '../../widgets/constant.dart';
 import 'filter.dart';
@@ -23,8 +24,8 @@ class _SearchResultState extends State<SearchResult> {
   List<String> filterTitleList = [
     'Filter',
     'Non Stop',
-    '1 Stop',
-    'Duration',
+    'Up to 1 Stop',
+    'All Available',
   ];
 
   List<String> selectedFilter = [];
@@ -45,11 +46,14 @@ class _SearchResultState extends State<SearchResult> {
   }
 
   void _onScroll() {
+
     final provider = context.read<SearchFlightProvider>();
+    final filterProvider = context.read<FilterProvider>();
+    final countryProvider = context.read<CountryProvider>();
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
         !provider.isLoadingMore &&
         provider.hasMore) {
-      provider.searchFlight(loadMore: true);
+      provider.searchFlight(filterProvider: filterProvider,countryProvider:countryProvider,loadMore: true);
     }
   }
 
@@ -94,14 +98,7 @@ class _SearchResultState extends State<SearchResult> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
         children: [
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: Text(
-              'Flights from ${provider.fromCity?.city ?? ''} to ${provider.toCity?.city ?? ''}',
-              style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
-            ),
-          ),
+
           const SizedBox(height: 10),
           HorizontalList(
             padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -114,13 +111,15 @@ class _SearchResultState extends State<SearchResult> {
                       ? selectedFilter.remove(filterTitleList[i])
                       : selectedFilter.add(filterTitleList[i]);
                   if (i == 0) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const Filter()));
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const Filter()));
                   }
                 });
               },
               child: Container(
                 height: 35,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                 decoration: BoxDecoration(
                   color: selectedFilter.contains(filterTitleList[i])
                       ? kPrimaryColor.withOpacity(0.1)
@@ -130,9 +129,11 @@ class _SearchResultState extends State<SearchResult> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.sort, color: kSubTitleColor).visible(i == 0),
+                    const Icon(Icons.sort, color: kSubTitleColor)
+                        .visible(i == 0),
                     const SizedBox(width: 5).visible(i == 0),
-                    Text(filterTitleList[i], style: kTextStyle.copyWith(color: kSubTitleColor)),
+                    Text(filterTitleList[i],
+                        style: kTextStyle.copyWith(color: kSubTitleColor)),
                   ],
                 ),
               ),
@@ -181,17 +182,17 @@ class _SearchResultState extends State<SearchResult> {
       child: Container(
         padding: const EdgeInsets.all(10.0),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.0),
-          color: kWhite,
-          // border: Border.all(color: kTitleColor),
-          boxShadow: [
-            BoxShadow(
+            borderRadius: BorderRadius.circular(10.0),
+            color: kWhite,
+            // border: Border.all(color: kTitleColor),
+            boxShadow: [
+              BoxShadow(
                 color: kTitleColor.withOpacity(0.5),
                 spreadRadius: 1,
                 blurRadius: 1,
 
-            )
-          ]
+              )
+            ]
         ),
         child: Column(
           children: [
@@ -214,7 +215,7 @@ class _SearchResultState extends State<SearchResult> {
             ),
             const Divider(thickness: 1, color: kBorderColorTextField),
             GestureDetector(
-              onTap: () => const FlightDetails().launch(context),
+              onTap: () => FlightDetails(flight: flight).launch(context),
               child: Column(
                 children: [
                   ListTile(

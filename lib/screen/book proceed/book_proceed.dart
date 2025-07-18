@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
+import '../../providers/search_flight_provider.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
 import '../../widgets/data_widgets.dart';
@@ -77,6 +80,7 @@ class _BookProceedState extends State<BookProceed> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SearchFlightProvider>();
     return DefaultTabController(
       initialIndex: 1,
       length: 2,
@@ -93,14 +97,14 @@ class _BookProceedState extends State<BookProceed> with TickerProviderStateMixin
             horizontalTitleGap: 00.0,
             contentPadding: const EdgeInsets.only(right: 15.0),
             title: Text(
-              'Trip To',
+              '${provider.fromCity?.city ?? ''} - ${provider.toCity?.city ?? ''}',
               style: kTextStyle.copyWith(
                 color: kWhite,
                 fontWeight: FontWeight.bold,
               ),
             ),
             subtitle: Text(
-              'New Delhi',
+              '${DateFormat('EEE d MMM').format(provider.selectedDate)} | ${provider.adultCount} Adult, ${provider.childCount} Child, ${provider.infantCount} Infant',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: kTextStyle.copyWith(color: kWhite),

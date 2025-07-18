@@ -4,6 +4,7 @@ class FlightResponse {
   final String message;
   final List<FlightDetail> onwardDetail;
   final List<FlightDetail> returnDetail;
+  final List<String> availableAilrlines;
   final Pagination pagination;
   final String timestamp;
 
@@ -13,22 +14,54 @@ class FlightResponse {
     required this.message,
     required this.onwardDetail,
     required this.returnDetail,
+    required this.availableAilrlines,
     required this.pagination,
     required this.timestamp,
   });
 
   factory FlightResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] ?? {};
+
+
+    final onwardRaw = data['onward_detail'];
+    final onwardList = (onwardRaw is List)
+        ? onwardRaw.map((e) => FlightDetail.fromJson(e)).toList()
+        : <FlightDetail>[];
+
+
+    final returnRaw = data['return_detail'];
+    final returnList = (returnRaw is List)
+        ? returnRaw.map((e) => FlightDetail.fromJson(e)).toList()
+        : <FlightDetail>[];
+
+
+    final airlinesRaw = data['available_airlines'];
+    final airlinesList = (airlinesRaw is List)
+        ? airlinesRaw.map((e) => e.toString()).toList()
+        : <String>[];
+
+    final paginationRaw = json['pagination'];
+    final paginationObj = (paginationRaw is Map<String, dynamic>)
+        ? Pagination.fromJson(paginationRaw)
+        : Pagination(page: 0, limit: 0, pager: 0, limitr: 0, onwardTotal: 0, onwardPages: 0, returnTotal: 0, returnPages: 0);
+
     return FlightResponse(
       status: json['status'] ?? '',
       code: json['code'] ?? 0,
       message: json['message'] ?? '',
-      onwardDetail: (json['data']['onward_detail'] as List<dynamic>)
-          .map((e) => FlightDetail.fromJson(e))
-          .toList(),
-      returnDetail: (json['data']['return_detail'] as List<dynamic>)
-          .map((e) => FlightDetail.fromJson(e))
-          .toList(),
-      pagination: Pagination.fromJson(json['pagination']),
+      onwardDetail: onwardList,
+      // (json['data']['onward_detail'] as List<dynamic>)
+      //     .map((e) => FlightDetail.fromJson(e))
+      //     .toList(),
+       returnDetail: returnList,
+       // (json['data']['return_detail'] as List<dynamic>)
+      //     .map((e) => FlightDetail.fromJson(e))
+      //     .toList(),
+      availableAilrlines: airlinesList,
+      // (json['data']['available_airlines'] as List<dynamic>)
+      // .map((e)=> e.toString())
+      // .toList(),
+      pagination: paginationObj,
       timestamp: json['timestamp'] ?? '',
     );
   }
@@ -40,6 +73,7 @@ class FlightResponse {
     'data': {
       'onward_detail': onwardDetail.map((e) => e.toJson()).toList(),
       'return_detail': returnDetail.map((e) => e.toJson()).toList(),
+      'available_airline': availableAilrlines
     },
     'pagination': pagination.toJson(),
     'timestamp': timestamp,
@@ -250,6 +284,8 @@ class Pagination {
   Map<String, dynamic> toJson() => {
     'page': page,
     'limit': limit,
+    'page_r': pager,
+    'limit_r': limitr,
     'onward_total': onwardTotal,
     'onward_pages': onwardPages,
     'return_total': returnTotal,

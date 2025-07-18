@@ -10,15 +10,19 @@ import 'package:flightbooking/screen/search/search_result.dart';
 import 'package:flutter/material.dart';
 
 import '../screen/profile/profile_screen.dart';
+import '../screen/search/round_trip_search_result.dart';
 
 class AppRoutes {
+
+ static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   static const String splash = "/";
   static const String onBoard = "/OnBoard";
   static const String welcome = "/WelcomeScreen";
   static const String profile = "/Profile";
   static const String notification = "/NotificationSc";
   static const String search = "/Search";
-  static const String searchResult = "/Search Result";
+  static const String searchResult = "/SearchResult";
+  static const String searchRoundTripResult = "/SearchRoundTripResult";
 }
 
 
@@ -45,21 +49,10 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const Search());
 
       case AppRoutes.searchResult:
-        // final args = settings.arguments as SearchResultArguments;
-        return MaterialPageRoute(builder: (_) => SearchResult(
-            // flightDetail: args.flightDetail,
-            // returnFlights: args.returnFlights,
-            // fromCity: args.fromCity,
-            // toCity: args.toCity,
-            // travelDate: args.travelDate,
-            // returnDate: args.returnDate,
-            // adultCount: args.adultCount,
-            // childCount: args.childCount,
-            // infantCount: args.infantCount,
-            // isRoundTrip: args.isRoundTrip,
-        ));
+        return MaterialPageRoute(builder: (_) => const SearchResult());
 
-
+      case AppRoutes.searchRoundTripResult:
+        return MaterialPageRoute(builder: (_) => const RoundTripSearchResult());
 
 
       default:
