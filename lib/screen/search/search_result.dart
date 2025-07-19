@@ -7,6 +7,7 @@ import '../../models/flight_details_model.dart';
 import '../../providers/country_provider.dart';
 import '../../providers/filter_provider.dart';
 import '../../providers/search_flight_provider.dart';
+import '../../shimmers/search_result_shimmer.dart';
 import '../../widgets/constant.dart';
 import 'filter.dart';
 import 'flight_details.dart';
@@ -28,14 +29,8 @@ class _SearchResultState extends State<SearchResult> {
     'All Available',
   ];
 
-  List<String> selectedFilter = [];
 
-  String formatJourneyTime(String minutes) {
-    final totalMinutes = int.tryParse(minutes) ?? 0;
-    final hours = totalMinutes ~/ 60;
-    final mins = totalMinutes % 60;
-    return '${hours}h ${mins}m';
-  }
+
 
   late final ScrollController _scrollController;
 
@@ -95,49 +90,104 @@ class _SearchResultState extends State<SearchResult> {
         ),
       ),
       body: provider.isLoading && provider.onwardFlights.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ?  ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: 10,
+        itemBuilder: (_, __) => const ShimmerSearchResultFlightCard(),
+      )
           : Column(
         children: [
 
           const SizedBox(height: 10),
           HorizontalList(
+
             padding: const EdgeInsets.symmetric(horizontal: 15),
             itemCount: filterTitleList.length,
             physics: const BouncingScrollPhysics(),
-            itemBuilder: (_, i) => GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedFilter.contains(filterTitleList[i])
-                      ? selectedFilter.remove(filterTitleList[i])
-                      : selectedFilter.add(filterTitleList[i]);
-                  if (i == 0) {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const Filter()));
+            itemBuilder: (_, i) {
+              final filterProvider = context.watch<FilterProvider>();
+              final bool isSelected = (){
+                switch (filterTitleList[i]){
+                  case 'Non Stop':
+                    return filterProvider.selectedStopOption == 'nonStop';
+                  case 'Up to 1 Stop':
+                    return filterProvider.selectedStopOption == 'oneStop';
+                  case 'All Available':
+                    return filterProvider.selectedStopOption == 'all';
+                  default:
+                    return false;
+                }
+              }();
+           return   GestureDetector(
+                onTap: () async  {
+
+
+                  if(i == 0){
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const Filter()));
+                    return;
                   }
-                });
-              },
-              child: Container(
-                height: 35,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                decoration: BoxDecoration(
-                  color: selectedFilter.contains(filterTitleList[i])
-                      ? kPrimaryColor.withOpacity(0.1)
-                      : kWhite,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: kBorderColorTextField),
+
+                  String mappedValue;
+
+                  if(filterTitleList[i] == 'Non Stop'){
+                    mappedValue = 'nonStop';
+                  }else if(filterTitleList[i] == 'Up to 1 Stop') {
+                    mappedValue = 'oneStop';
+                  } else{
+                    mappedValue = 'all';
+                  }
+
+                  context.read<FilterProvider>().selectStopOption(mappedValue);
+                  final filterProvider = context.read<FilterProvider>();
+
+                  final stopOptionsForApi = mappedValue == 'all' ? null : mappedValue;
+                  final departureTime = filterProvider.selectedDepartureTime;
+                  final selectedAirlines = filterProvider.selectedAirlines.isNotEmpty
+                      ? filterProvider.selectedAirlines.join(',')
+                      : null;
+                  final refundableOption = filterProvider.selectedRefundableOptions;
+                  final classOptions = filterProvider.selectedClassOptions;
+
+
+                  final searchProvider = context.read<SearchFlightProvider>();
+                  final countryProvider = context.read<CountryProvider>();
+
+
+                  await searchProvider.searchFlight(
+                      filterProvider: filterProvider,
+                      countryProvider: countryProvider,
+                      stopOption: stopOptionsForApi,
+                    departureTime: departureTime,
+                    selectedAirlines: selectedAirlines,
+                    refundableOption: refundableOption,
+                    classOptions: classOptions,
+                  );
+
+                },
+                child: Container(
+                  height: 35,
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? kPrimaryColor.withOpacity(0.1)
+                        : kWhite,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: kBorderColorTextField),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.sort, color: kSubTitleColor)
+                          .visible(i == 0),
+                      const SizedBox(width: 5).visible(i == 0),
+                      Text(filterTitleList[i],
+                          style: kTextStyle.copyWith(color: kSubTitleColor)),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.sort, color: kSubTitleColor)
-                        .visible(i == 0),
-                    const SizedBox(width: 5).visible(i == 0),
-                    Text(filterTitleList[i],
-                        style: kTextStyle.copyWith(color: kSubTitleColor)),
-                  ],
-                ),
-              ),
-            ),
+              );
+
+            }
           ),
           const SizedBox(height: 10),
 
@@ -149,10 +199,7 @@ class _SearchResultState extends State<SearchResult> {
               itemCount: provider.onwardFlights.length + (provider.isLoadingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == provider.onwardFlights.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
+                  return const ShimmerSearchResultFlightCard();
                 }
 
                 return _buildFlightCard(
@@ -172,7 +219,7 @@ class _SearchResultState extends State<SearchResult> {
   Widget _buildFlightCard(FlightDetail flight, {bool isReturn = false, required String fromCity,
     required String toCity,}) {
     final countryProvider = context.watch<CountryProvider>();
-    final airlineCode = flight.airline;
+    final airlineCode = flight.airlineCode;
     final airline = countryProvider.airlines.firstWhere(
           (a) => a.code.toUpperCase() == airlineCode.toUpperCase(),
       orElse: () => Airline(name: airlineCode, code: airlineCode, logo: ''),
@@ -225,7 +272,7 @@ class _SearchResultState extends State<SearchResult> {
                         const Icon(Icons.swap_horiz, color: kPrimaryColor),
                         const SizedBox(width: 5.0),
                         Text(
-                          "${formatJourneyTime(flight.journeyTime.toString())}  Layover at ${isReturn ? fromCity : toCity}",
+                          "${flight.journeyTime}  Layover at ${isReturn ? fromCity : toCity}",
                           style: kTextStyle.copyWith(color: kSubTitleColor),
                         ),
                       ],
@@ -245,7 +292,8 @@ class _SearchResultState extends State<SearchResult> {
                       ),
                       Column(
                         children: [
-                          Text(formatJourneyTime(flight.journeyTime.toString()),
+                          Text(
+                              flight.journeyTime,
                               style: kTextStyle.copyWith(fontSize: 12, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),
                           Text("${flight.stops} Stop",

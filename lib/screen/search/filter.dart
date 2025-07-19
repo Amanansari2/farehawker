@@ -120,7 +120,7 @@ class _FilterState extends State<Filter> {
                     onPressed: () async {
                       final searchProvider = context.read<SearchFlightProvider>();
                       final filter = context.read<FilterProvider>();
-                      final filterProvider = context.read<FilterProvider>();
+                      // final filterProvider = context.read<FilterProvider>();
                       final countryProvider = context.read<CountryProvider>();
 
                       final bool noStopSelected = filter.selectedStopOption == null;
@@ -146,26 +146,27 @@ class _FilterState extends State<Filter> {
                       }
 
                       bool success;
+                      searchProvider.setFilterParams(filter);
                       if(searchProvider.isRoundTrip){
                         success = await searchProvider.searchRoundTripFlight(
-                          filterProvider: filterProvider,
+                          filterProvider: filter,
                           countryProvider: countryProvider,
                           initialLoad: true,
-                          stopOption: filter.selectedStopOption == 'all' ? null:filter.selectedStopOption,
-                          refundableOption: filter.selectedRefundableOptions,
-                          departureTime: filter.selectedDepartureTime,
-                          selectedAirlines: filter.selectedAirlines.isNotEmpty ? filter.selectedAirlines.join(',') : null,
-                          classOptions: filter.selectedClassOptions,
+                          stopOption:searchProvider.stopOption,
+                          refundableOption: searchProvider.refundableOption,
+                          departureTime: searchProvider.departureTime,
+                          selectedAirlines: searchProvider.selectedAirlines,
+                          classOptions: searchProvider.classOptions,
                         );
                       }else{
                         success = await searchProvider.searchFlight(
                           countryProvider: countryProvider,
-                          filterProvider: filterProvider,
-                          stopOption: filter.selectedStopOption == 'all' ? null:filter.selectedStopOption,
-                          refundableOption: filter.selectedRefundableOptions,
-                          departureTime: filter.selectedDepartureTime,
-                          selectedAirlines: filter.selectedAirlines.isNotEmpty ? filter.selectedAirlines.join(',') : null,
-                          classOptions: filter.selectedClassOptions ?? 'Economy',
+                          filterProvider: filter,
+                          stopOption:searchProvider.stopOption,
+                          refundableOption: searchProvider.refundableOption,
+                          departureTime: searchProvider.departureTime,
+                          selectedAirlines: searchProvider.selectedAirlines,
+                          classOptions: searchProvider.classOptions,
                         );
                       }
                       if(!mounted) return;
@@ -408,10 +409,10 @@ class _FilterState extends State<Filter> {
               contentPadding: EdgeInsets.zero,
               title: Text('Select All', style: kTextStyle.copyWith(color: kSubTitleColor)),
               leading: Icon(
-                filter.areAllAirlinesSelected()
+                filter.areAllAirlinesSelected
                     ? Icons.check_box_rounded
                     : Icons.check_box_outline_blank_rounded,
-                color:  filter.areAllAirlinesSelected() ? kPrimaryColor : kSubTitleColor,
+                color:  filter.areAllAirlinesSelected ? kPrimaryColor : kSubTitleColor,
               ),
               onTap: filter.toggleSelectAllAirlines,
 

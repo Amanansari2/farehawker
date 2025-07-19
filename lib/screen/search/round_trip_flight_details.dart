@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +29,18 @@ class RoundTripFlightDetails extends StatefulWidget {
 class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  Duration calculateLayover(String arrivalDateTime, String nextDepartureDateTime) {
+    try {
+      final format =
+      DateFormat("dd MMM yyyy HH:mm"); // matches "24 Jul 2025 20:05"
+      final arrDate = format.parse(arrivalDateTime);
+      final depDate = format.parse(nextDepartureDateTime);
+      return depDate.difference(arrDate);
+    } catch (e) {
+      debugPrint("Error parsing layover times: $e");
+      return Duration.zero;
+    }
+  }
   @override
   void initState() {
     super.initState();
@@ -40,12 +53,7 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
     super.dispose();
   }
 
-  String formatJourneyTime(String minutes) {
-    final totalMinutes = int.tryParse(minutes) ?? 0;
-    final hours = totalMinutes ~/ 60;
-    final mins = totalMinutes % 60;
-    return '${hours}h ${mins}m';
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +205,7 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
             style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
           ),
           Text(
-            "${flight.stops} Stop | ${formatJourneyTime(flight.journeyTime.toString())} | ${flight.cabinClass}",
+            "${flight.stops} Stop | ${flight.journeyTime} | ${flight.cabinClass}",
             style: kTextStyle.copyWith(color: kSubTitleColor),
           ),
         ],
@@ -207,19 +215,7 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
 
   Widget _buildFlightSegments(FlightDetail flight) {
     final countryProvider = context.read<CountryProvider>();
-    final originAirport = countryProvider.airport.firstWhere(
-          (a) => a.code.toUpperCase() == flight.origin.toUpperCase(),
-      orElse: () => Airport(code: flight.origin, name: flight.origin, logo: '', city: flight.origin),
-    );
-    final destinationAirport = countryProvider.airport.firstWhere(
-          (a) => a.code.toUpperCase() == flight.destination.toUpperCase(),
-      orElse: () => Airport(code: flight.destination, name: flight.destination, logo: '', city: flight.destination),
-    );
-    final points = (flight.journeyPoints ?? "")
-        .split('-')
-        .map((p) => p.trim())
-        .where((p) => p.isNotEmpty)
-        .toList();
+
 
     return Container(
       width: context.width(),
@@ -236,30 +232,86 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildAirlineTile(flight),
-          const SizedBox(height: 10),
-          _buildTimelineSegment(
-            time: flight.departureTime,
-            location: originAirport.city.isNotEmpty ? originAirport.city : originAirport.code,
-            airport: '${flight.departure} - ${originAirport.name}${flight.departureTerminal.isNotEmpty ? ' ${flight.departureTerminal}' : ''}',
-            arrivalTime: flight.arrivalTime,
-            arrivalLocation: destinationAirport.city.isNotEmpty ? destinationAirport.city : destinationAirport.code,
-            arrivalAirport: '${flight.arrival} - ${destinationAirport.name}${flight.arrivalTerminal.isNotEmpty ? ' ${flight.arrivalTerminal}' : ''}',
-          ),
           const SizedBox(height: 20),
-          if (points.length > 2)
-            for (int i = 1; i < points.length - 1; i++) ...[
-              _buildLayoverInfo(),
-              const SizedBox(height: 10),
-              _buildTimelineSegment(
-                time: '06:45 am',
-                location: 'Dubai',
-                airport: 'Dubai International Airport',
-                arrivalTime: '06:45 am',
-                arrivalLocation: 'Chennai',
-                arrivalAirport: 'Thu 6 Jan -Hazrat Shahjala  Chennai International airport ',
+          for (int i = 0; i < flight.stopovers.length; i++) ...[
+            if (i > 0) ...[
+              _buildLayoverInfo(
+                flight.stopovers[i].cityOrigin.isNotEmpty
+                    ? flight.stopovers[i].cityOrigin
+                    : flight.stopovers[i].departure,
+               flight.stopovers[i - 1].arrivalTime,
+               flight.stopovers[i].departureTime,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
             ],
+            Builder(builder: (_) {
+              final stop = flight.stopovers[i];
+              final depFromApiCity = stop.cityOrigin;
+              final depFromApiName = stop.airportNameOrigin;
+
+              final depAirport = countryProvider.airport.firstWhere(
+                    (a) => a.code.toUpperCase() == stop.departure.toUpperCase(),
+                orElse: () => Airport(
+                  code: stop.departure,
+                  name: stop.departure,
+                  logo: '',
+                  city: stop.departure,
+                ),
+              );
+              final depCity = depFromApiCity.isNotEmpty
+                  ? depFromApiCity
+                  : (depAirport.city.isNotEmpty
+                  ? depAirport.city
+                  : stop.departure);
+
+              final depName = depFromApiName.isNotEmpty
+                  ? depFromApiName
+                  : (depAirport.name.isNotEmpty
+                  ? depAirport.name
+                  : stop.departure);
+
+              final arrFromApiCity = stop.cityDestination;
+              final arrFromApiName = stop.airportNameDestination;
+
+              final arrAirport = countryProvider.airport.firstWhere(
+                    (a) => a.code.toUpperCase() == stop.arrival.toUpperCase(),
+                orElse: () => Airport(
+                  code: stop.arrival,
+                  name: stop.arrival,
+                  logo: '',
+                  city: stop.arrival,
+                ),
+              );
+
+              final arrCity = arrFromApiCity.isNotEmpty
+                  ? arrFromApiCity
+                  : (arrAirport.city.isNotEmpty
+                  ? arrAirport.city
+                  : stop.arrival);
+
+              final arrName = arrFromApiName.isNotEmpty
+                  ? arrFromApiName
+                  : (arrAirport.name.isNotEmpty
+                  ? arrAirport.name
+                  : stop.arrival);
+
+              return _buildTimelineSegment(
+                  time: stop.departureTime,
+                  location: depCity.isNotEmpty ? depCity : stop.departure,
+                  airport: '${stop.departure} -- $depName',
+                  terminal: stop.terminalOrigin.isNotEmpty
+                      ? "Terminal -- ${stop.terminalOrigin}"
+                      : "",
+                  arrivalTime: stop.arrivalTime,
+                  arrivalLocation: arrCity.isNotEmpty ? arrCity : stop.arrival,
+                  arrivalAirport: '${stop.arrival} -- $arrName',
+                  arrivalTerminal: stop.terminalDestination.isNotEmpty
+                      ? "Terminal -- ${stop.terminalDestination}"
+                      : "");
+            }),
+            const SizedBox(height: 20),
+          ],
+
         ],
       ),
     );
@@ -268,8 +320,8 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
   Widget _buildAirlineTile(FlightDetail flight) {
     final countryProvider = context.read<CountryProvider>();
     final airline = countryProvider.airlines.firstWhere(
-          (a) => a.code.toUpperCase() == flight.airline.toUpperCase(),
-      orElse: () => Airline(name: flight.airline, code: flight.airline, logo: ''),
+          (a) => a.code.toUpperCase() == flight.airlineCode.toUpperCase(),
+      orElse: () => Airline(name: flight.airlineCode, code: flight.airlineCode, logo: ''),
     );
     final logo = airline.logo.isNotEmpty
         ? NetworkImage('${AppConfigs.mediaUrl}${airline.logo}')
@@ -289,13 +341,16 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
         style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
-        '${formatJourneyTime(flight.journeyTime.toString())} in flight',
+        '${flight.journeyTime} in flight',
         style: kTextStyle.copyWith(color: kSubTitleColor),
       ),
     );
   }
 
-  Widget _buildLayoverInfo() {
+  Widget _buildLayoverInfo( String layoverCity, String arrivalTime, String nextDepartureTime) {
+    final diff = calculateLayover(arrivalTime, nextDepartureTime);
+    final hours = diff.inHours;
+    final minutes = diff.inMinutes.remainder(60);
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFE3E7EA),
@@ -312,11 +367,11 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
           child: const Icon(Icons.directions_walk_outlined, color: kSubTitleColor),
         ),
         title: Text(
-          'Overnight layover in Dubai',
+          'Layover in $layoverCity',
           style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          '07h 05m',
+            '${hours.toString().padLeft(2, '0')} h ${minutes.toString().padLeft(2, '0')} m',
           style: kTextStyle.copyWith(color: kSubTitleColor),
         ),
       ),
@@ -327,9 +382,12 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
     required String time,
     required String location,
     required String airport,
+    required String terminal,
     required String arrivalTime,
     required String arrivalLocation,
     required String arrivalAirport,
+    required String arrivalTerminal,
+
   }) {
     return Row(
       children: [
@@ -384,6 +442,15 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            SizedBox(
+              width: 265,
+              child: Text(
+                terminal,
+                maxLines: 2,
+                style: kTextStyle.copyWith(color: kSubTitleColor),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             const SizedBox(height: 25.0),
             Text(
               '$arrivalTime - $arrivalLocation',
@@ -393,6 +460,15 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
               width: 265,
               child: Text(
                 arrivalAirport,
+                maxLines: 2,
+                style: kTextStyle.copyWith(color: kSubTitleColor),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(
+              width: 265,
+              child: Text(
+                arrivalTerminal,
                 maxLines: 2,
                 style: kTextStyle.copyWith(color: kSubTitleColor),
                 overflow: TextOverflow.ellipsis,

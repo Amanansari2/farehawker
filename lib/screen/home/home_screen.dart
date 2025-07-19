@@ -8,6 +8,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
 import 'package:provider/provider.dart';
 
+import '../../data.dart';
 import '../../models/country_list_model.dart';
 import '../../models/search_result_arguments.dart';
 import '../../providers/country_provider.dart';
@@ -1073,6 +1074,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               const SizedBox(height: 20),
                               Center(child: _buildSearchButton(
                                   context, provider)),
+
+                              const SizedBox(height: 50),
+                              GestureDetector(
+                                onTap: (){
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) =>TestShimmerScreen()));
+                                },
+                                child: Text("Testing Shimmer ", style: TextStyle(fontSize: 25),),
+                              )
                             ],
                           ),
                         ),

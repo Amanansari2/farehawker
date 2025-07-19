@@ -73,7 +73,7 @@ class FlightResponse {
     'data': {
       'onward_detail': onwardDetail.map((e) => e.toJson()).toList(),
       'return_detail': returnDetail.map((e) => e.toJson()).toList(),
-      'available_airline': availableAilrlines
+      'available_airlines': availableAilrlines
     },
     'pagination': pagination.toJson(),
     'timestamp': timestamp,
@@ -87,21 +87,28 @@ class FlightDetail {
   final double childFare;
   final double infantFare;
   final String totalFare;
-  final double offeredFare;
-  final double baseFare;
+  // final double offeredFare;
+  // final double baseFare;
   final double tax;
   final String flightID;
   final String flightNumber;
-  final String airline;
+  final String airlineCode;
+  final String airlineName;
   final String origin;
   final String destination;
+  final String originAirportName;
+  final String originCountryCode;
+  final String originCountryName;
+  final String destinationAirportName;
+  final String destinationCountryCode;
+  final String destinationCountryName;
   final String departure;
   final String departureTime;
   final String arrival;
   final String arrivalTime;
   final String departureTerminal;
   final String arrivalTerminal;
-  final int journeyTime;
+  final String journeyTime;
   final String journeyPoints;
   final int stops;
   final String adultBaggage;
@@ -116,6 +123,7 @@ class FlightDetail {
   final String resultIndex;
   final String traceID;
   final int availSeat;
+  final List<Stopover> stopovers;
 
   FlightDetail({
     required this.source,
@@ -124,12 +132,11 @@ class FlightDetail {
     required this.childFare,
     required this.infantFare,
     required this.totalFare,
-    required this.offeredFare,
-    required this.baseFare,
     required this.tax,
     required this.flightID,
     required this.flightNumber,
-    required this.airline,
+    required this.airlineCode,
+    required this.airlineName,
     required this.origin,
     required this.destination,
     required this.departure,
@@ -153,6 +160,13 @@ class FlightDetail {
     required this.resultIndex,
     required this.traceID,
     required this.availSeat,
+    required this.originAirportName,
+    required this.originCountryCode,
+    required this.originCountryName,
+    required this.destinationAirportName,
+    required this.destinationCountryCode,
+    required this.destinationCountryName,
+    required this.stopovers
   });
 
   factory FlightDetail.fromJson(Map<String, dynamic> json) {
@@ -169,6 +183,11 @@ class FlightDetail {
       return int.tryParse(value.toString()) ?? 0;
     }
 
+    final stopoversRaw = json['stopovers'];
+    final stopoversList = (stopoversRaw is List)
+                          ?stopoversRaw.map((e) => Stopover.fromJson(e)).toList()
+                          :<Stopover>[];
+
     return FlightDetail(
       source: json['source'] ?? '',
       fare: parseDouble(json['fare']),
@@ -176,12 +195,11 @@ class FlightDetail {
       childFare: parseDouble(json['child_fare']),
       infantFare: parseDouble(json['infant_fare']),
       totalFare: json['total_fare'] ?? '',
-      offeredFare: parseDouble(json['offered_fare']),
-      baseFare: parseDouble(json['base_fare']),
       tax: parseDouble(json['tax']),
       flightID: json['FlightID'] ?? '',
       flightNumber: json['flight_number'] ?? '',
-      airline: json['airline'] ?? '',
+      airlineCode: json['AirlineCode'] ?? '',
+      airlineName: json['AirlineName'] ?? '',
       origin: json['origin'] ?? '',
       destination: json['destination'] ?? '',
       departure: json['departure'] ?? '',
@@ -190,7 +208,7 @@ class FlightDetail {
       arrivalTime: json['arrival_time'] ?? '',
       departureTerminal: json['departure_terminal'] ?? '',
       arrivalTerminal: json['arrival_terminal'] ?? '',
-      journeyTime: parseInt(json['JourneyTime']),
+      journeyTime: json['JourneyTime']?.toString() ?? '',
       journeyPoints: json['JourneyPoints'] ?? '',
       stops: parseInt(json['Stops']),
       adultBaggage: json['adult_baggage'] ?? '',
@@ -204,7 +222,15 @@ class FlightDetail {
       couponApplicable: json['coupon_applicable'].toString().toLowerCase() == 'true',
       resultIndex: json['result_index'] ?? '',
       traceID: json['trace_id'] ?? '',
-      availSeat: parseInt(json['AvailSeat']),
+      availSeat: parseInt(json['AvailSeat'],),
+      originAirportName : json['OriginAirportName'] ?? '',
+      originCountryCode : json['OriginCountryCode'] ?? '',
+      originCountryName : json['OriginCountryName'] ?? '',
+      destinationAirportName : json['DestinationAirportName'] ?? '',
+      destinationCountryCode : json['DestinationCountryCode'] ?? '',
+      destinationCountryName : json['DestinationCountryName'] ?? '',
+      stopovers: stopoversList,
+
     );
   }
 
@@ -215,12 +241,11 @@ class FlightDetail {
     'child_fare': childFare,
     'infant_fare': infantFare,
     'total_fare': totalFare,
-    'offered_fare': offeredFare,
-    'base_fare': baseFare,
     'tax': tax,
     'FlightID': flightID,
     'flight_number': flightNumber,
-    'airline': airline,
+    'AirlineCode': airlineCode,
+    'AirlineName': airlineName,
     'origin': origin,
     'destination': destination,
     'departure': departure,
@@ -244,6 +269,90 @@ class FlightDetail {
     'result_index': resultIndex,
     'trace_id': traceID,
     'AvailSeat': availSeat,
+    'stopovers' : stopovers.map((e) => e.toJson()).toList()
+  };
+}
+
+class Stopover{
+  final String departure;
+  final String arrival;
+  final String airportOrigin;
+  final String airportNameOrigin;
+  final String cityOrigin;
+  final String countryOrigin;
+  final String terminalOrigin;
+  final String airportDestination;
+  final String airportNameDestination;
+  final String cityDestination;
+  final String countryDestination;
+  final String terminalDestination;
+  final String arrivalTime;
+  final String departureTime;
+  final int durationMinutes;
+  final String durationFormatted;
+
+  Stopover({
+    required this.departure,
+    required this.arrival,
+    required this.airportOrigin,
+    required this.airportNameOrigin,
+    required this.cityOrigin,
+    required this.countryOrigin,
+    required this.terminalOrigin,
+    required this.airportDestination,
+    required this.airportNameDestination,
+    required this.cityDestination,
+    required this.countryDestination,
+    required this.terminalDestination,
+    required this.arrivalTime,
+    required this.departureTime,
+    required this.durationMinutes,
+    required this.durationFormatted,
+});
+  factory Stopover.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      return int.tryParse(value.toString()) ?? 0;
+    }
+
+    return Stopover(
+      departure: json['departure'] ?? '',
+      arrival: json['arrival'] ?? '',
+      airportOrigin: json['airport_Origin'] ?? '',
+      airportNameOrigin: json['airport_name_Origin'] ?? '',
+      cityOrigin: json['city_Origin'] ?? '',
+      countryOrigin: json['country_Origin'] ?? '',
+      terminalOrigin: json['terminal_Origin'] ?? '',
+      airportDestination: json['airport_Destination'] ?? '',
+      airportNameDestination: json['airport_name_Destination'] ?? '',
+      cityDestination: json['city_Destination'] ?? '',
+      countryDestination: json['country_Destination'] ?? '',
+      terminalDestination: json['terminal_Destination'] ?? '',
+      arrivalTime: json['arrival_time'] ?? '',
+      departureTime: json['departure_time'] ?? '',
+      durationMinutes: parseInt(json['duration_minutes']),
+      durationFormatted: json['duration_formatted'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'departure': departure,
+    'arrival': arrival,
+    'airport_Origin': airportOrigin,
+    'airport_name_Origin': airportNameOrigin,
+    'city_Origin': cityOrigin,
+    'country_Origin': countryOrigin,
+    'terminal_Origin': terminalOrigin,
+    'airport_Destination': airportDestination,
+    'airport_name_Destination': airportNameDestination,
+    'city_Destination': cityDestination,
+    'country_Destination': countryDestination,
+    'terminal_Destination': terminalDestination,
+    'arrival_time': arrivalTime,
+    'departure_time': departureTime,
+    'duration_minutes': durationMinutes,
+    'duration_formatted': durationFormatted,
   };
 }
 

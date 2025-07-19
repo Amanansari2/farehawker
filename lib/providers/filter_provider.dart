@@ -49,11 +49,11 @@ class FilterProvider extends ChangeNotifier {
 
  List<Airline> airlineOptions = [];
   List<String> selectedAirlines = [];
-
-
   bool showAlliances = false;
 
 
+
+  bool get areAllAirlinesSelected => selectedAirlines.length == airlineOptions.length;
 
   void filterAirlinesFromSearch(Set<String> codes, List<Airline> allAirlines){
     airlineOptions = allAirlines
@@ -114,9 +114,7 @@ class FilterProvider extends ChangeNotifier {
     return selectedAirlines.contains(code);
   }
 
-  bool areAllAirlinesSelected() {
-    return selectedAirlines.length == airlineOptions.length;
-  }
+
 
 
   void resetFilters() {

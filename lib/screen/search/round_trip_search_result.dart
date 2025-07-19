@@ -1,3 +1,4 @@
+import 'package:flightbooking/api_services/app_logger.dart';
 import 'package:flightbooking/screen/search/round_trip_flight_details.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -31,11 +32,10 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
   List<String> filterTitleList = [
     'Filter',
     'Non Stop',
-    '1 Stop',
-    'Duration',
+    'Up to 1 Stop',
+    'All Available',
   ];
 
-  List<String> selectedFilter = [];
 
   @override
   void initState() {
@@ -44,6 +44,14 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
       ..addListener(_onwardScrollListener);
     _returnScrollController = ScrollController()
       ..addListener(_returnScrollListener);
+
+    Future.microtask(() {
+      context.read<SearchFlightProvider>().searchRoundTripFlight(
+        filterProvider: context.read<FilterProvider>(),
+        countryProvider: context.read<CountryProvider>(),
+        initialLoad: true,
+      );
+    });
   }
 
   void _onwardScrollListener() {
@@ -139,47 +147,100 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
                 ),
               ),
             )),
-        body: Column(
+        body: provider.isLoading && provider.onwardFlights.isEmpty && provider.returnFlights.isEmpty
+        ? const Center(child: CircularProgressIndicator(),)
+        :Column(
           children: [
             const SizedBox(height: 10),
             HorizontalList(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               itemCount: filterTitleList.length,
               physics: const BouncingScrollPhysics(),
-              itemBuilder: (_, i) => GestureDetector(
-                onTap: () {
-                  setState(() {
-                    selectedFilter.contains(filterTitleList[i])
-                        ? selectedFilter.remove(filterTitleList[i])
-                        : selectedFilter.add(filterTitleList[i]);
-                    if (i == 0) {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const Filter()));
+              itemBuilder: (_, i) {
+
+                final filterProvider = context.watch<FilterProvider>();
+
+                final bool isSelected = (){
+                  switch (filterTitleList[i]){
+                    case 'Non Stop':
+                      return filterProvider.selectedStopOption == 'nonStop';
+                    case 'Up to 1 Stop':
+                      return filterProvider.selectedStopOption == 'oneStop';
+                    case 'All Available':
+                      return filterProvider.selectedStopOption == 'all';
+                    default:
+                      return false;
+                  }
+                }();
+
+               return  GestureDetector(
+                  onTap: ()async  {
+
+
+
+                    if(i == 0){
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const Filter()));
+                      return;
                     }
-                  });
-                },
-                child: Container(
-                  height: 35,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: selectedFilter.contains(filterTitleList[i])
-                        ? kPrimaryColor.withOpacity(0.1)
-                        : kWhite,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: kBorderColorTextField),
+
+                    String mappedValue;
+
+                    if(filterTitleList[i] == 'Non Stop'){
+                      mappedValue = 'nonStop';
+                    } else if(filterTitleList[i] == 'Up to 1 Stop'){
+                      mappedValue = 'oneStop';
+                    }else{
+                      mappedValue = 'all';
+                    }
+
+                    context.read<FilterProvider>().selectStopOption(mappedValue);
+
+                    final stopOptionsForApi = mappedValue == 'all' ? null : mappedValue;
+                    final departureTime = filterProvider.selectedDepartureTime;
+                    final selectedAirlines = filterProvider.selectedAirlines.isNotEmpty
+                        ? filterProvider.selectedAirlines.join(',')
+                        : null;
+                    final refundableOption = filterProvider.selectedRefundableOptions;
+                    final classOptions = filterProvider.selectedClassOptions;
+
+                    final searchProvider = context.read<SearchFlightProvider>();
+                    final countryProvider = context.read<CountryProvider>();
+
+                    await searchProvider.searchRoundTripFlight(
+                        filterProvider: context.read<FilterProvider>(),
+                        countryProvider: countryProvider,
+                      stopOption: stopOptionsForApi,
+                      departureTime: departureTime,
+                      selectedAirlines: selectedAirlines,
+                      refundableOption: refundableOption,
+                      classOptions: classOptions,
+                    );
+
+                  },
+                  child: Container(
+                    height: 35,
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? kPrimaryColor.withOpacity(0.1)
+                          : kWhite,
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: kBorderColorTextField),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.sort, color: kSubTitleColor)
+                            .visible(i == 0),
+                        const SizedBox(width: 5).visible(i == 0),
+                        Text(filterTitleList[i],
+                            style: kTextStyle.copyWith(color: kSubTitleColor)),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.sort, color: kSubTitleColor)
-                          .visible(i == 0),
-                      const SizedBox(width: 5).visible(i == 0),
-                      Text(filterTitleList[i],
-                          style: kTextStyle.copyWith(color: kSubTitleColor)),
-                    ],
-                  ),
-                ),
-              ),
+                );
+
+              }
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -253,6 +314,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
     required bool isReturn,
     required bool isOnwardTab,
   }) {
+    AppLogger.log("📋 Building list: ${flights.length} flights");
     return ListView.builder(
       controller: controller,
       physics: const BouncingScrollPhysics(),
@@ -264,6 +326,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
             child: Center(child: CircularProgressIndicator()),
           );
         }
+        AppLogger.log(" Building card for ${flights[index].flightNumber}");
         return _buildFlightCard(
           flights[index],
           fromCity: fromCity,
@@ -283,18 +346,13 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
     required bool isOnwardTab,
   }) {
     final countryProvider = context.watch<CountryProvider>();
-    final airlineCode = flight.airline;
+    final airlineCode = flight.airlineCode;
     final airline = countryProvider.airlines.firstWhere(
       (a) => a.code.toUpperCase() == airlineCode.toUpperCase(),
       orElse: () => Airline(name: airlineCode, code: airlineCode, logo: ''),
     );
 
-    String formatJourneyTime(String minutes) {
-      final totalMinutes = int.tryParse(minutes) ?? 0;
-      final hours = totalMinutes ~/ 60;
-      final mins = totalMinutes % 60;
-      return '${hours}h ${mins}m';
-    }
+
 
     final isSelected = isOnwardTab
         ? selectedOnwardFlight == flight
@@ -336,7 +394,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
                     children: [
                       CircleAvatar(
                         radius: 15,
-                        backgroundImage: airline.logo.isNotEmpty
+                        backgroundImage: (airline.logo != null && airline.logo!.isNotEmpty)
                             ? NetworkImage(
                                 '${AppConfigs.mediaUrl}${airline.logo}')
                             : const AssetImage('images/indigo.png')
@@ -359,26 +417,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
                       ),
                     ],
                   ),
-                  // ListTile(
-                  //   leading: CircleAvatar(
-                  //     radius: 15,
-                  //     backgroundImage: airline.logo.isNotEmpty
-                  //         ? NetworkImage('${AppConfigs.mediaUrl}${airline.logo}')
-                  //         : const AssetImage('images/indigo.png') as ImageProvider,
-                  //   ),
-                  //   title: Text(
-                  //     airline.name,
-                  //     style: kTextStyle.copyWith(
-                  //         color: kTitleColor, fontWeight: FontWeight.bold),
-                  //   ),
-                  //   trailing: Text(
-                  //     '$currencySign${flight.fare}',
-                  //     style: kTextStyle.copyWith(
-                  //         color: kTitleColor,
-                  //         fontWeight: FontWeight.bold,
-                  //         fontSize: 18),
-                  //   ),
-                  // ),
+
                   const Divider(thickness: 1, color: kBorderColorTextField),
                   ListTile(
                     title: Text(
@@ -391,7 +430,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
                         const Icon(Icons.swap_horiz, color: kPrimaryColor),
                         const SizedBox(width: 5.0),
                         Text(
-                          "${formatJourneyTime(flight.journeyTime.toString())}  Layover at ${isReturn ? fromCity : toCity}",
+                           "${flight.journeyTime}  Layover at ${isReturn ? fromCity : toCity}",
                           style: kTextStyle.copyWith(color: kSubTitleColor),
                         ),
                       ],
@@ -412,7 +451,9 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
                       ),
                       Column(
                         children: [
-                          Text(formatJourneyTime(flight.journeyTime.toString()),
+                          Text(
+
+                              flight.journeyTime,
                               style: kTextStyle.copyWith(
                                   fontSize: 12, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),

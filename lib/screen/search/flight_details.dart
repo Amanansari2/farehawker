@@ -431,10 +431,10 @@
 //
 //
 // }
-import 'package:flightbooking/api_services/internet_status.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flightbooking/generated/l10n.dart' as lang;
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -447,8 +447,6 @@ import '../../providers/search_flight_provider.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
 import '../book proceed/book_proceed.dart';
- import 'package:flightbooking/generated/l10n.dart' as lang;
-
 
 ////////////////////////////////////////////////////////////////
 // Padding(
@@ -723,14 +721,11 @@ import '../book proceed/book_proceed.dart';
 // ),
 // )
 
-
-
 // //
-
-
 
 class FlightDetails extends StatefulWidget {
   final FlightDetail flight;
+
   const FlightDetails({required this.flight, Key? key}) : super(key: key);
 
   @override
@@ -738,11 +733,18 @@ class FlightDetails extends StatefulWidget {
 }
 
 class _FlightDetailsState extends State<FlightDetails> {
-  String formatJourneyTime(String minutes) {
-    final totalMinutes = int.tryParse(minutes) ?? 0;
-    final hours = totalMinutes ~/ 60;
-    final mins = totalMinutes % 60;
-    return '${hours}h ${mins}m';
+
+  Duration calculateLayover(String arrivalDateTime, String nextDepartureDateTime) {
+    try {
+      final format =
+          DateFormat("dd MMM yyyy HH:mm"); // matches "24 Jul 2025 20:05"
+      final arrDate = format.parse(arrivalDateTime);
+      final depDate = format.parse(nextDepartureDateTime);
+      return depDate.difference(arrDate);
+    } catch (e) {
+      debugPrint("Error parsing layover times: $e");
+      return Duration.zero;
+    }
   }
 
   @override
@@ -751,7 +753,7 @@ class _FlightDetailsState extends State<FlightDetails> {
 
     return SafeArea(
       child: Scaffold(
-         backgroundColor: kBlueColor,
+        backgroundColor: kBlueColor,
         bottomNavigationBar: _buildBottomBar(),
         body: Padding(
           padding: const EdgeInsets.only(top: 40.0),
@@ -770,9 +772,6 @@ class _FlightDetailsState extends State<FlightDetails> {
                 children: [
                   _buildHeader(context),
                   _buildFlightDetailCard(provider),
-
-
-
                 ],
               ),
             ),
@@ -790,7 +789,8 @@ class _FlightDetailsState extends State<FlightDetails> {
         children: [
           Text(
             lang.S.of(context).flightDetails,
-            style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+            style: kTextStyle.copyWith(
+                color: kTitleColor, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           GestureDetector(
@@ -828,13 +828,17 @@ class _FlightDetailsState extends State<FlightDetails> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Divider(height: 0, thickness: 1.0, color: kBorderColorTextField),
+          const Divider(
+              height: 0, thickness: 1.0, color: kBorderColorTextField),
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Column(
               children: [
                 _buildRouteHeader(provider),
-                Divider(height: 0, thickness: 1.0, color: kPrimaryColor.withOpacity(0.2)),
+                Divider(
+                    height: 0,
+                    thickness: 1.0,
+                    color: kPrimaryColor.withOpacity(0.2)),
                 _buildFlightSegments(),
               ],
             ),
@@ -860,10 +864,11 @@ class _FlightDetailsState extends State<FlightDetails> {
         children: [
           Text(
             '${provider.fromCity?.city ?? ''} - ${provider.toCity?.city ?? ''}',
-            style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+            style: kTextStyle.copyWith(
+                color: kTitleColor, fontWeight: FontWeight.bold),
           ),
           Text(
-            "${widget.flight.stops} Stop | ${formatJourneyTime(widget.flight.journeyTime.toString())} | ${widget.flight.cabinClass}",
+            "${widget.flight.stops} Stop | ${widget.flight.journeyTime} | ${widget.flight.cabinClass}",
             style: kTextStyle.copyWith(color: kSubTitleColor),
           ),
         ],
@@ -874,23 +879,6 @@ class _FlightDetailsState extends State<FlightDetails> {
   // ------------------ FLIGHT SEGMENTS ------------------
   Widget _buildFlightSegments() {
     final countryProvider = context.read<CountryProvider>();
-    final originAirport = countryProvider.airport.firstWhere(
-          (a) => a.code.toUpperCase() == widget.flight.origin.toUpperCase(),
-      orElse: () => Airport(code: widget.flight.origin, name: widget.flight.origin, logo: '', city: widget.flight.origin),
-    );
-
-// Find destination airport
-    final destinationAirport = countryProvider.airport.firstWhere(
-          (a) => a.code.toUpperCase() == widget.flight.destination.toUpperCase(),
-      orElse: () => Airport(code: widget.flight.destination, name: widget.flight.destination, logo: '', city: widget.flight.destination
-      ),
-    );
-
-    final points = (widget.flight.journeyPoints ?? "")
-                   .split('-')
-                   .map((p) => p.trim())
-                   .where((p) => p.isNotEmpty)
-                   .toList();
     return Container(
       width: context.width(),
       padding: const EdgeInsets.all(10.0),
@@ -906,33 +894,84 @@ class _FlightDetailsState extends State<FlightDetails> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildAirlineTile(),
-          const SizedBox(height: 10),
-          _buildTimelineSegment(
-            time: widget.flight.departureTime,
-            location: originAirport.city.isNotEmpty ? originAirport.city : originAirport.code,
-            airport: '${widget.flight.departure} - ${originAirport.name} -${widget.flight.departureTerminal.isNotEmpty ? ' ${widget.flight.departureTerminal}' : ''}',
-              arrivalTime:  widget.flight.arrivalTime,
-              arrivalLocation:destinationAirport.city.isNotEmpty ? destinationAirport.city : destinationAirport.code,
-              arrivalAirport: '${widget.flight.arrival} - ${destinationAirport.name} -${widget.flight.arrivalTerminal.isNotEmpty ? ' ${widget.flight.arrivalTerminal}' : ''}'
-          ),
           const SizedBox(height: 20),
-
-
-          if (points.length > 2) ...[
-            for (int i = 1; i<points.length -1; i++) ...[
-
-              _buildLayoverInfo(),
-              const SizedBox(height: 10),
-              _buildTimelineSegment(
-                  time: '06:45 am',
-                  location: 'Dubai',
-                  airport: 'Dubai International Airport',
-                  arrivalTime: '06:45 am',
-                  arrivalLocation: 'Chennai',
-                  arrivalAirport: 'Thu 6 Jan -Hazrat Shahjala  Chennai International airport '
+          for (int i = 0; i < widget.flight.stopovers.length; i++) ...[
+            if (i > 0) ...[
+              _buildLayoverInfo(
+                widget.flight.stopovers[i].cityOrigin.isNotEmpty
+                    ? widget.flight.stopovers[i].cityOrigin
+                    : widget.flight.stopovers[i].departure,
+                widget.flight.stopovers[i - 1].arrivalTime,
+                widget.flight.stopovers[i].departureTime,
               ),
-                const SizedBox(height: 20,)
-              ]
+              const SizedBox(height: 10),
+            ],
+            Builder(builder: (_) {
+              final stop = widget.flight.stopovers[i];
+              final depFromApiCity = stop.cityOrigin;
+              final depFromApiName = stop.airportNameOrigin;
+
+              final depAirport = countryProvider.airport.firstWhere(
+                (a) => a.code.toUpperCase() == stop.departure.toUpperCase(),
+                orElse: () => Airport(
+                  code: stop.departure,
+                  name: stop.departure,
+                  logo: '',
+                  city: stop.departure,
+                ),
+              );
+              final depCity = depFromApiCity.isNotEmpty
+                  ? depFromApiCity
+                  : (depAirport.city.isNotEmpty
+                      ? depAirport.city
+                      : stop.departure);
+
+              final depName = depFromApiName.isNotEmpty
+                  ? depFromApiName
+                  : (depAirport.name.isNotEmpty
+                      ? depAirport.name
+                      : stop.departure);
+
+              final arrFromApiCity = stop.cityDestination;
+              final arrFromApiName = stop.airportNameDestination;
+
+              final arrAirport = countryProvider.airport.firstWhere(
+                (a) => a.code.toUpperCase() == stop.arrival.toUpperCase(),
+                orElse: () => Airport(
+                  code: stop.arrival,
+                  name: stop.arrival,
+                  logo: '',
+                  city: stop.arrival,
+                ),
+              );
+
+              final arrCity = arrFromApiCity.isNotEmpty
+                  ? arrFromApiCity
+                  : (arrAirport.city.isNotEmpty
+                      ? arrAirport.city
+                      : stop.arrival);
+
+              final arrName = arrFromApiName.isNotEmpty
+                  ? arrFromApiName
+                  : (arrAirport.name.isNotEmpty
+                      ? arrAirport.name
+                      : stop.arrival);
+
+              return _buildTimelineSegment(
+                  time: stop.departureTime,
+                  location: depCity.isNotEmpty ? depCity : stop.departure,
+                  airport: '${stop.departure} -- $depName',
+                  terminal: stop.terminalOrigin.isNotEmpty
+                      ? "Terminal -- ${stop.terminalOrigin}"
+                      : "",
+                  arrivalTime: stop.arrivalTime,
+                  arrivalLocation: arrCity.isNotEmpty ? arrCity : stop.arrival,
+                  arrivalAirport: '${stop.arrival} -- $arrName',
+                  arrivalTerminal: stop.terminalDestination.isNotEmpty
+                      ? "Terminal -- ${stop.terminalDestination}"
+                      : "");
+            }),
+            const SizedBox(height: 20),
           ],
         ],
       ),
@@ -943,8 +982,11 @@ class _FlightDetailsState extends State<FlightDetails> {
   Widget _buildAirlineTile() {
     final countryProvider = context.read<CountryProvider>();
     final airline = countryProvider.airlines.firstWhere(
-          (a) => a.code.toUpperCase() == widget.flight.airline.toUpperCase(),
-      orElse: () => Airline(name: widget.flight.airline, code: widget.flight.airline, logo: ''),
+      (a) => a.code.toUpperCase() == widget.flight.airlineCode.toUpperCase(),
+      orElse: () => Airline(
+          name: widget.flight.airlineCode,
+          code: widget.flight.airlineCode,
+          logo: ''),
     );
 
     final logo = airline.logo.isNotEmpty
@@ -961,17 +1003,23 @@ class _FlightDetailsState extends State<FlightDetails> {
       ),
       title: Text(
         airline.name,
-        style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+        style: kTextStyle.copyWith(
+            color: kTitleColor, fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
-        '${formatJourneyTime(widget.flight.journeyTime.toString())} in flight',
+        '${widget.flight.journeyTime} in flight',
         style: kTextStyle.copyWith(color: kSubTitleColor),
       ),
     );
   }
 
   // ------------------ LAYOVER INFO ------------------
-  Widget _buildLayoverInfo() {
+  Widget _buildLayoverInfo(
+      String layoverCity, String arrivalTime, String nextDepartureTime) {
+    final diff = calculateLayover(arrivalTime, nextDepartureTime);
+    final hours = diff.inHours;
+    final minutes = diff.inMinutes.remainder(60);
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFE3E7EA),
@@ -985,14 +1033,16 @@ class _FlightDetailsState extends State<FlightDetails> {
         leading: Container(
           padding: const EdgeInsets.all(5.0),
           decoration: const BoxDecoration(color: Colors.transparent),
-          child: const Icon(Icons.directions_walk_outlined, color: kSubTitleColor),
+          child:
+              const Icon(Icons.directions_walk_outlined, color: kSubTitleColor),
         ),
         title: Text(
-          'Overnight layover in Dubai',
-          style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+          'Layover in $layoverCity',
+          style: kTextStyle.copyWith(
+              color: kTitleColor, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          '07h 05m',
+          '${hours.toString().padLeft(2, '0')} h ${minutes.toString().padLeft(2, '0')} m',
           style: kTextStyle.copyWith(color: kSubTitleColor),
         ),
       ),
@@ -1004,9 +1054,11 @@ class _FlightDetailsState extends State<FlightDetails> {
     required String time,
     required String location,
     required String airport,
+    required String terminal,
     required String arrivalTime,
     required String arrivalLocation,
     required String arrivalAirport,
+    required String arrivalTerminal,
   }) {
     return Row(
       children: [
@@ -1019,7 +1071,8 @@ class _FlightDetailsState extends State<FlightDetails> {
                 Container(
                   height: 100.0,
                   width: 2,
-                  decoration: BoxDecoration(color: kPrimaryColor.withOpacity(0.5)),
+                  decoration:
+                      BoxDecoration(color: kPrimaryColor.withOpacity(0.5)),
                 ),
                 const Padding(
                   padding: EdgeInsets.only(right: 1.0, bottom: 5),
@@ -1038,7 +1091,8 @@ class _FlightDetailsState extends State<FlightDetails> {
                 decoration: BoxDecoration(
                   color: kWhite,
                   shape: BoxShape.circle,
-                  border: Border.all(color: kPrimaryColor.withOpacity(0.5), width: 3),
+                  border: Border.all(
+                      color: kPrimaryColor.withOpacity(0.5), width: 3),
                 ),
               ),
             ),
@@ -1053,12 +1107,22 @@ class _FlightDetailsState extends State<FlightDetails> {
               children: [
                 Text(
                   '$time - $location',
-                  style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+                  style: kTextStyle.copyWith(
+                      color: kTitleColor, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(
                   width: 265,
                   child: Text(
                     airport,
+                    maxLines: 2,
+                    style: kTextStyle.copyWith(color: kSubTitleColor),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(
+                  width: 265,
+                  child: Text(
+                    terminal,
                     maxLines: 2,
                     style: kTextStyle.copyWith(color: kSubTitleColor),
                     overflow: TextOverflow.ellipsis,
@@ -1073,7 +1137,8 @@ class _FlightDetailsState extends State<FlightDetails> {
               children: [
                 Text(
                   '$arrivalTime - $arrivalLocation',
-                  style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+                  style: kTextStyle.copyWith(
+                      color: kTitleColor, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(
                   width: 265,
@@ -1084,12 +1149,19 @@ class _FlightDetailsState extends State<FlightDetails> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                SizedBox(
+                  width: 265,
+                  child: Text(
+                    arrivalTerminal,
+                    maxLines: 2,
+                    style: kTextStyle.copyWith(color: kSubTitleColor),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ],
         ),
-
-
       ],
     );
   }
@@ -1107,7 +1179,8 @@ class _FlightDetailsState extends State<FlightDetails> {
         ),
         subtitle: Text(
           ' $currencySign${widget.flight.fare}',
-          style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
+          style: kTextStyle.copyWith(
+              color: kTitleColor, fontWeight: FontWeight.bold),
         ),
         trailing: SizedBox(
           height: 80,

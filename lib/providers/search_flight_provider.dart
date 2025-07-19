@@ -27,6 +27,26 @@ class SearchFlightProvider extends ChangeNotifier{
   String? error;
 
 
+  String? _stopOption;
+  String? _refundableOption;
+  String? _departureTime;
+  String? _selectedAirlines;
+  String? _classOptions;
+
+  String? get stopOption => _stopOption;
+  String? get refundableOption => _refundableOption;
+  String? get departureTime => _departureTime;
+  String? get selectedAirlines => _selectedAirlines;
+  String? get classOptions => _classOptions;
+
+
+  void setFilterParams(FilterProvider filter) {
+    _stopOption = filter.selectedStopOption == 'all' ? null : filter.selectedStopOption;
+    _refundableOption = filter.selectedRefundableOptions;
+    _departureTime = filter.selectedDepartureTime;
+    _selectedAirlines = filter.selectedAirlines.isNotEmpty ? filter.selectedAirlines.join(',') : null;
+    _classOptions = filter.selectedClassOptions ?? 'Economy';
+  }
 
 
 
@@ -126,7 +146,7 @@ class SearchFlightProvider extends ChangeNotifier{
 
 
   Set<String> get uniqueAirlineCodes {
-    return onwardFlights.map((e) => e.airline).toSet();
+    return onwardFlights.map((e) => e.airlineCode).toSet();
   }
 
 
@@ -178,6 +198,12 @@ class SearchFlightProvider extends ChangeNotifier{
 
     try{
 
+      final effectiveStopOption = loadMore ? _stopOption : (stopOption ?? filterProvider.selectedStopOption);
+      final effectiveRefundable = loadMore ? _refundableOption : refundableOption;
+      final effectiveDeparture = loadMore ? _departureTime : departureTime;
+      final effectiveAirlines = loadMore ? _selectedAirlines : selectedAirlines;
+      final effectiveClass = loadMore ? _classOptions : classOptions;
+
       final response = await _searchFlightRepository.searchFlight(
           from: fromCity!.cityCode,
           to: toCity!.cityCode,
@@ -187,11 +213,11 @@ class SearchFlightProvider extends ChangeNotifier{
           infant: infantCount.toString(),
          page: _currentPage,
          limit: 10,
-        stopOption: stopOption,
-        refundableOption: refundableOption,
-        departureTime: departureTime,
-        selectedAirlines: selectedAirlines,
-        classOptions: classOptions
+        stopOption: effectiveStopOption,
+        refundableOption: effectiveRefundable,
+        departureTime: effectiveDeparture,
+        selectedAirlines: effectiveAirlines,
+        classOptions: effectiveClass,
       );
 
       if(response['success'] == true){
@@ -291,7 +317,9 @@ class SearchFlightProvider extends ChangeNotifier{
     return false;
     }
 
-    if (initialLoad) {
+    final isFreshSearch = initialLoad || (!loadMoreOnward && !loadMoreReturn);
+
+    if (isFreshSearch) {
       _currentPage = 1;
       _returnPage = 1;
       onwardFlights.clear();
@@ -326,6 +354,12 @@ class SearchFlightProvider extends ChangeNotifier{
     notifyListeners();
 
     try {
+      final effectiveStopOption = (loadMoreOnward || loadMoreReturn) ? _stopOption : stopOption;
+      final effectiveRefundable = (loadMoreOnward || loadMoreReturn) ? _refundableOption : refundableOption;
+      final effectiveDeparture = (loadMoreOnward || loadMoreReturn) ? _departureTime : departureTime;
+      final effectiveAirlines = (loadMoreOnward || loadMoreReturn) ? _selectedAirlines : selectedAirlines;
+      final effectiveClass = (loadMoreOnward || loadMoreReturn) ? _classOptions : classOptions;
+
       final response = await _searchFlightRepository.searchRoundFlight(
         from: fromCity!.cityCode,
         to: toCity!.cityCode,
@@ -338,11 +372,11 @@ class SearchFlightProvider extends ChangeNotifier{
         limit: 10,
         pageR: _returnPage,
         limitR: 10,
-          stopOption: stopOption,
-          refundableOption: refundableOption,
-          departureTime: departureTime,
-          selectedAirlines: selectedAirlines,
-          classOptions: classOptions
+        stopOption: effectiveStopOption,
+        refundableOption: effectiveRefundable,
+        departureTime: effectiveDeparture,
+        selectedAirlines: effectiveAirlines,
+        classOptions: effectiveClass,
       );
 
       if (response['success'] == true) {
@@ -357,19 +391,36 @@ class SearchFlightProvider extends ChangeNotifier{
 
         AppLogger.log("🛫 Onward Flights Fetched: ${onwardData.length}");
         AppLogger.log("🔁 Return Flights Fetched: ${returnData.length}");
-        if (initialLoad || loadMoreOnward) {
-          if (loadMoreOnward) {
-            onwardFlights.addAll(onwardData);
-          } else {
-            onwardFlights = onwardData;
+        // if (initialLoad || loadMoreOnward) {
+        //   if (loadMoreOnward) {
+        //     onwardFlights.addAll(onwardData);
+        //   } else {
+        //     onwardFlights = onwardData;
+        //   }
+        // }
+        //
+        // if (initialLoad || loadMoreReturn) {
+        //   if (loadMoreReturn) {
+        //     returnFlights.addAll(returnData);
+        //   } else {
+        //     returnFlights = returnData;
+        //   }
+        // }
+
+        if (loadMoreOnward) {
+          onwardFlights.addAll(onwardData);
+        } else {
+          if (initialLoad || (!loadMoreOnward && !loadMoreReturn)) {
+            onwardFlights = List<FlightDetail>.from(onwardData);
           }
         }
 
-        if (initialLoad || loadMoreReturn) {
-          if (loadMoreReturn) {
-            returnFlights.addAll(returnData);
-          } else {
-            returnFlights = returnData;
+
+        if (loadMoreReturn) {
+          returnFlights.addAll(returnData);
+        } else {
+          if (initialLoad || (!loadMoreOnward && !loadMoreReturn)) {
+            returnFlights = List<FlightDetail>.from(returnData);
           }
         }
 
