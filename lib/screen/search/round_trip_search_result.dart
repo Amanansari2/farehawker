@@ -11,6 +11,7 @@ import '../../models/flight_details_model.dart';
 import '../../providers/country_provider.dart';
 import '../../providers/filter_provider.dart';
 import '../../providers/search_flight_provider.dart';
+import '../../shimmers/search_result_shimmer.dart';
 import '../../widgets/constant.dart';
 import 'filter.dart';
 
@@ -148,7 +149,11 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
               ),
             )),
         body: provider.isLoading && provider.onwardFlights.isEmpty && provider.returnFlights.isEmpty
-        ? const Center(child: CircularProgressIndicator(),)
+        ?  ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: 10,
+          itemBuilder: (_, __) => const ShimmerSearchResultFlightCard(),
+        )
         :Column(
           children: [
             const SizedBox(height: 10),
@@ -321,10 +326,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
       itemCount: flights.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == flights.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const ShimmerSearchResultFlightCard();
         }
         AppLogger.log(" Building card for ${flights[index].flightNumber}");
         return _buildFlightCard(
@@ -336,7 +338,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
         );
       },
     );
-  }
+  }    
 
   Widget _buildFlightCard(
     FlightDetail flight, {
@@ -430,7 +432,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
                         const Icon(Icons.swap_horiz, color: kPrimaryColor),
                         const SizedBox(width: 5.0),
                         Text(
-                           "${flight.journeyTime}  Layover at ${isReturn ? fromCity : toCity}",
+                           "${flight.journeyTime}  -- In Flight",
                           style: kTextStyle.copyWith(color: kSubTitleColor),
                         ),
                       ],

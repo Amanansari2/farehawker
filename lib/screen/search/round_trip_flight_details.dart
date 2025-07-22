@@ -4,7 +4,6 @@ import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:provider/provider.dart';
-
 import '../../api_services/configs/app_configs.dart';
 import '../../models/airline_list_model.dart';
 import '../../models/airport_list_model.dart';
@@ -504,7 +503,7 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
               borderRadius: BorderRadius.circular(30.0),
             ),
             onPressed: () {
-              const BookProceed().launch(context);
+              // const BookProceed().launch(context);
             },
             buttonTextColor: kWhite,
           ),

@@ -443,9 +443,11 @@ import '../../models/airline_list_model.dart';
 import '../../models/airport_list_model.dart';
 import '../../models/flight_details_model.dart';
 import '../../providers/country_provider.dart';
+import '../../providers/fare_rule_provider.dart';
 import '../../providers/search_flight_provider.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
+import '../../widgets/custom_dialog.dart';
 import '../book proceed/book_proceed.dart';
 
 ////////////////////////////////////////////////////////////////
@@ -734,10 +736,11 @@ class FlightDetails extends StatefulWidget {
 
 class _FlightDetailsState extends State<FlightDetails> {
 
-  Duration calculateLayover(String arrivalDateTime, String nextDepartureDateTime) {
+  Duration calculateLayover(String arrivalDateTime,
+      String nextDepartureDateTime) {
     try {
       final format =
-          DateFormat("dd MMM yyyy HH:mm"); // matches "24 Jul 2025 20:05"
+      DateFormat("dd MMM yyyy HH:mm"); // matches "24 Jul 2025 20:05"
       final arrDate = format.parse(arrivalDateTime);
       final depDate = format.parse(nextDepartureDateTime);
       return depDate.difference(arrDate);
@@ -765,15 +768,21 @@ class _FlightDetailsState extends State<FlightDetails> {
                 topRight: Radius.circular(30.0),
               ),
             ),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context),
-                  _buildFlightDetailCard(provider),
-                ],
-              ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(context),
+                        _buildFlightDetailCard(provider),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -788,7 +797,9 @@ class _FlightDetailsState extends State<FlightDetails> {
       child: Row(
         children: [
           Text(
-            lang.S.of(context).flightDetails,
+            lang.S
+                .of(context)
+                .flightDetails,
             style: kTextStyle.copyWith(
                 color: kTitleColor, fontWeight: FontWeight.bold),
           ),
@@ -868,7 +879,8 @@ class _FlightDetailsState extends State<FlightDetails> {
                 color: kTitleColor, fontWeight: FontWeight.bold),
           ),
           Text(
-            "${widget.flight.stops} Stop | ${widget.flight.journeyTime} | ${widget.flight.cabinClass}",
+            "${widget.flight.stops} Stop | ${widget.flight
+                .journeyTime} | ${widget.flight.cabinClass}",
             style: kTextStyle.copyWith(color: kSubTitleColor),
           ),
         ],
@@ -912,50 +924,52 @@ class _FlightDetailsState extends State<FlightDetails> {
               final depFromApiName = stop.airportNameOrigin;
 
               final depAirport = countryProvider.airport.firstWhere(
-                (a) => a.code.toUpperCase() == stop.departure.toUpperCase(),
-                orElse: () => Airport(
-                  code: stop.departure,
-                  name: stop.departure,
-                  logo: '',
-                  city: stop.departure,
-                ),
+                    (a) => a.code.toUpperCase() == stop.departure.toUpperCase(),
+                orElse: () =>
+                    Airport(
+                      code: stop.departure,
+                      name: stop.departure,
+                      logo: '',
+                      city: stop.departure,
+                    ),
               );
               final depCity = depFromApiCity.isNotEmpty
                   ? depFromApiCity
                   : (depAirport.city.isNotEmpty
-                      ? depAirport.city
-                      : stop.departure);
+                  ? depAirport.city
+                  : stop.departure);
 
               final depName = depFromApiName.isNotEmpty
                   ? depFromApiName
                   : (depAirport.name.isNotEmpty
-                      ? depAirport.name
-                      : stop.departure);
+                  ? depAirport.name
+                  : stop.departure);
 
               final arrFromApiCity = stop.cityDestination;
               final arrFromApiName = stop.airportNameDestination;
 
               final arrAirport = countryProvider.airport.firstWhere(
-                (a) => a.code.toUpperCase() == stop.arrival.toUpperCase(),
-                orElse: () => Airport(
-                  code: stop.arrival,
-                  name: stop.arrival,
-                  logo: '',
-                  city: stop.arrival,
-                ),
+                    (a) => a.code.toUpperCase() == stop.arrival.toUpperCase(),
+                orElse: () =>
+                    Airport(
+                      code: stop.arrival,
+                      name: stop.arrival,
+                      logo: '',
+                      city: stop.arrival,
+                    ),
               );
 
               final arrCity = arrFromApiCity.isNotEmpty
                   ? arrFromApiCity
                   : (arrAirport.city.isNotEmpty
-                      ? arrAirport.city
-                      : stop.arrival);
+                  ? arrAirport.city
+                  : stop.arrival);
 
               final arrName = arrFromApiName.isNotEmpty
                   ? arrFromApiName
                   : (arrAirport.name.isNotEmpty
-                      ? arrAirport.name
-                      : stop.arrival);
+                  ? arrAirport.name
+                  : stop.arrival);
 
               return _buildTimelineSegment(
                   time: stop.departureTime,
@@ -982,11 +996,13 @@ class _FlightDetailsState extends State<FlightDetails> {
   Widget _buildAirlineTile() {
     final countryProvider = context.read<CountryProvider>();
     final airline = countryProvider.airlines.firstWhere(
-      (a) => a.code.toUpperCase() == widget.flight.airlineCode.toUpperCase(),
-      orElse: () => Airline(
-          name: widget.flight.airlineCode,
-          code: widget.flight.airlineCode,
-          logo: ''),
+          (a) =>
+      a.code.toUpperCase() == widget.flight.airlineCode.toUpperCase(),
+      orElse: () =>
+          Airline(
+              name: widget.flight.airlineCode,
+              code: widget.flight.airlineCode,
+              logo: ''),
     );
 
     final logo = airline.logo.isNotEmpty
@@ -1014,8 +1030,8 @@ class _FlightDetailsState extends State<FlightDetails> {
   }
 
   // ------------------ LAYOVER INFO ------------------
-  Widget _buildLayoverInfo(
-      String layoverCity, String arrivalTime, String nextDepartureTime) {
+  Widget _buildLayoverInfo(String layoverCity, String arrivalTime,
+      String nextDepartureTime) {
     final diff = calculateLayover(arrivalTime, nextDepartureTime);
     final hours = diff.inHours;
     final minutes = diff.inMinutes.remainder(60);
@@ -1034,7 +1050,7 @@ class _FlightDetailsState extends State<FlightDetails> {
           padding: const EdgeInsets.all(5.0),
           decoration: const BoxDecoration(color: Colors.transparent),
           child:
-              const Icon(Icons.directions_walk_outlined, color: kSubTitleColor),
+          const Icon(Icons.directions_walk_outlined, color: kSubTitleColor),
         ),
         title: Text(
           'Layover in $layoverCity',
@@ -1042,7 +1058,8 @@ class _FlightDetailsState extends State<FlightDetails> {
               color: kTitleColor, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          '${hours.toString().padLeft(2, '0')} h ${minutes.toString().padLeft(2, '0')} m',
+          '${hours.toString().padLeft(2, '0')} h ${minutes.toString().padLeft(
+              2, '0')} m',
           style: kTextStyle.copyWith(color: kSubTitleColor),
         ),
       ),
@@ -1072,7 +1089,7 @@ class _FlightDetailsState extends State<FlightDetails> {
                   height: 100.0,
                   width: 2,
                   decoration:
-                      BoxDecoration(color: kPrimaryColor.withOpacity(0.5)),
+                  BoxDecoration(color: kPrimaryColor.withOpacity(0.5)),
                 ),
                 const Padding(
                   padding: EdgeInsets.only(right: 1.0, bottom: 5),
@@ -1191,13 +1208,40 @@ class _FlightDetailsState extends State<FlightDetails> {
               color: kPrimaryColor,
               borderRadius: BorderRadius.circular(30.0),
             ),
-            onPressed: () {
-              const BookProceed().launch(context);
+            onPressed: () async {
+              final fareProvider = context.read<BookProceedProvider>();
+
+              await fareProvider.loadFareRulesForFlight(widget.flight);
+
+              if (fareProvider.error != null) {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return CustomDialogBox(
+                      title: "Error",
+                      descriptions: fareProvider.error,
+                      text: "Close",
+                      titleColor: kRedColor,
+                      img: 'images/dialog_error.png',
+                      functionCall: () {
+                        Navigator.of(context).pop(); // close dialog
+                      },
+                    );
+                  },
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  BookProceed(flight: widget.flight,),
+                  ),
+                );
+              }
             },
+
             buttonTextColor: kWhite,
           ),
         ),
-      ),
-    );
+      ),);
   }
 }

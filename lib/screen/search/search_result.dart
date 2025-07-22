@@ -272,7 +272,7 @@ class _SearchResultState extends State<SearchResult> {
                         const Icon(Icons.swap_horiz, color: kPrimaryColor),
                         const SizedBox(width: 5.0),
                         Text(
-                          "${flight.journeyTime}  Layover at ${isReturn ? fromCity : toCity}",
+                          "${flight.journeyTime} -- In Flight",
                           style: kTextStyle.copyWith(color: kSubTitleColor),
                         ),
                       ],
