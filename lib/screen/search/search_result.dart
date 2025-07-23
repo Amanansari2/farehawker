@@ -1,4 +1,5 @@
 import 'package:flightbooking/api_services/configs/app_configs.dart';
+import 'package:flightbooking/routes/route_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:provider/provider.dart';
@@ -123,7 +124,7 @@ class _SearchResultState extends State<SearchResult> {
 
 
                   if(i == 0){
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const Filter()));
+                    Navigator.pushNamed(context, AppRoutes.filter);
                     return;
                   }
 
@@ -262,7 +263,9 @@ class _SearchResultState extends State<SearchResult> {
             ),
             const Divider(thickness: 1, color: kBorderColorTextField),
             GestureDetector(
-              onTap: () => FlightDetails(flight: flight).launch(context),
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.flightDetails, arguments: flight);
+              },
               child: Column(
                 children: [
                   ListTile(

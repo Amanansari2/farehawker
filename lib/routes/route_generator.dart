@@ -1,14 +1,18 @@
 import 'package:flightbooking/api_services/app_logger.dart';
-import 'package:flightbooking/models/country_list_model.dart';
-import 'package:flightbooking/models/search_result_arguments.dart';
 import 'package:flightbooking/screen/Authentication/splash%20screen/onboard.dart';
 import 'package:flightbooking/screen/Authentication/splash%20screen/splash_screen.dart';
 import 'package:flightbooking/screen/Authentication/welcome_screen.dart';
+import 'package:flightbooking/screen/book%20proceed/book_proceed.dart';
 import 'package:flightbooking/screen/profile/setting/notification.dart';
+import 'package:flightbooking/screen/search/filter.dart';
+import 'package:flightbooking/screen/search/flight_details.dart';
+import 'package:flightbooking/screen/search/round_trip_flight_details.dart';
 import 'package:flightbooking/screen/search/search.dart';
 import 'package:flightbooking/screen/search/search_result.dart';
+import 'package:flightbooking/widgets/constant.dart';
 import 'package:flutter/material.dart';
 
+import '../models/flight_details_model.dart';
 import '../screen/profile/profile_screen.dart';
 import '../screen/search/round_trip_search_result.dart';
 
@@ -23,6 +27,10 @@ class AppRoutes {
   static const String search = "/Search";
   static const String searchResult = "/SearchResult";
   static const String searchRoundTripResult = "/SearchRoundTripResult";
+  static const String filter = "/Filter";
+  static const String flightDetails = "/FlightDetails";
+  static const String roundTripFlightDetails = "/RoundTripFlightDetails";
+  static const String bookProceed = "/BookProceed";
 }
 
 
@@ -54,18 +62,56 @@ class RouteGenerator {
       case AppRoutes.searchRoundTripResult:
         return MaterialPageRoute(builder: (_) => const RoundTripSearchResult());
 
+      case AppRoutes.filter:
+        return MaterialPageRoute(builder: (_) => const Filter());
+
+      case AppRoutes.flightDetails:
+        final args = settings.arguments;
+        if(args is FlightDetail) {
+          return MaterialPageRoute(
+              builder: (_) =>  FlightDetails(flight: args));
+        }
+        return _errorRoute("Invalid or missing FlightDetails ");
+
+      case AppRoutes.roundTripFlightDetails:
+        final args = settings.arguments;
+        if(args is Map<String, dynamic>){
+          final onward = args['onwardFlight'];
+          final returnF = args['returnFlight'];
+          if(onward != null && returnF != null){
+            return MaterialPageRoute(
+                builder: (_) => RoundTripFlightDetails(
+                    flight: onward,
+                    returnFlight: returnF,
+                ));
+          }
+        }
+          return _errorRoute("Invalid round trip Details");
+
+      case AppRoutes.bookProceed:
+        final args = settings.arguments;
+        if(args is FlightDetail){
+          return MaterialPageRoute(
+              builder: (_) => BookProceed(flight: args));
+        }
+        return _errorRoute("Invalid or Missing Information");
 
       default:
         AppLogger.log('⚠️ Route not found: ${settings.name}');
-        return MaterialPageRoute(
-            builder: (_) => const Scaffold(
-                  body: Center(
-                    child: Text(
-                      '404 - Page not found',
-                      style: TextStyle(fontSize: 18, color: Colors.red),
-                    ),
-                  ),
-                ));
+        return _errorRoute("404 - Page not found");
+
     }
+
   }
+           static MaterialPageRoute _errorRoute(String message){
+    return MaterialPageRoute(
+        builder: (_) => Scaffold(
+          body: Center(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 18, color: kRedColor),
+            ),
+          ),
+        ));
+           }
 }

@@ -1,4 +1,5 @@
 import 'package:flightbooking/api_services/app_logger.dart';
+import 'package:flightbooking/routes/route_generator.dart';
 import 'package:flightbooking/screen/search/round_trip_flight_details.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -184,7 +185,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
 
 
                     if(i == 0){
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const Filter()));
+                      Navigator.pushNamed(context, AppRoutes.filter);
                       return;
                     }
 
@@ -281,13 +282,14 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
                 padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => RoundTripFlightDetails(
-                                  flight: selectedOnwardFlight!,
-                                  returnFlight: selectedReturnFlight!,
-                                )));
+                        AppRoutes.roundTripFlightDetails,
+                        arguments: {
+                          'onwardFlight' : selectedOnwardFlight!,
+                          'returnFlight' : selectedReturnFlight!,
+                        }
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kPrimaryColor,

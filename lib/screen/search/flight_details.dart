@@ -432,6 +432,7 @@
 //
 // }
 import 'package:flightbooking/generated/l10n.dart' as lang;
+import 'package:flightbooking/routes/route_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:intl/intl.dart';
@@ -1230,11 +1231,10 @@ class _FlightDetailsState extends State<FlightDetails> {
                   },
                 );
               } else {
-                Navigator.push(
+                Navigator.pushNamed(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) =>  BookProceed(flight: widget.flight,),
-                  ),
+                  AppRoutes.bookProceed,
+                  arguments: widget.flight
                 );
               }
             },
