@@ -680,7 +680,7 @@ class _GroupBookingScreenState extends State<GroupBookingScreen> with TickerProv
                                                  ),
                                                ),
                                                child: ListTile(
-                                                 // onTap: ()=>const Search().launch(context),
+
                                                  title: Text(
                                                    '(NYC)',
                                                    style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),

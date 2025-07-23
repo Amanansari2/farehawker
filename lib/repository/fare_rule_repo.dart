@@ -67,4 +67,24 @@ class FareRulesRepository {
     throw Exception(response['message'] ?? 'Unknown error');
   }
 
+  Future<Map<String, dynamic>>  submitBooking(Map<String, dynamic> payload) async{
+    final customHeaders = {
+      'action' : 'InsertApplicantDetails',
+      'api-key' : AppConfigs.apiKey
+    };
+
+    final response = await postService.postRequest(
+        endPoint: flightSearch,
+        body: payload,
+        requireAuth: false,
+        customHeaders: customHeaders
+    );
+
+    if(response['status'] == 'success'){
+      return response;
+    }else{
+      throw Exception(response['message'] ?? "Unknown error occurred while booking.");
+    }
+  }
+
 }

@@ -124,6 +124,7 @@ class FlightDetail {
   final String traceID;
   final int availSeat;
   final List<Stopover> stopovers;
+  final bool passport;
 
   FlightDetail({
     required this.source,
@@ -166,7 +167,8 @@ class FlightDetail {
     required this.destinationAirportName,
     required this.destinationCountryCode,
     required this.destinationCountryName,
-    required this.stopovers
+    required this.stopovers,
+    required this.passport
   });
 
   factory FlightDetail.fromJson(Map<String, dynamic> json) {
@@ -230,6 +232,7 @@ class FlightDetail {
       destinationCountryCode : json['DestinationCountryCode'] ?? '',
       destinationCountryName : json['DestinationCountryName'] ?? '',
       stopovers: stopoversList,
+      passport:  json['Passport'].toString().toLowerCase() == 'true'
 
     );
   }
@@ -269,7 +272,8 @@ class FlightDetail {
     'result_index': resultIndex,
     'trace_id': traceID,
     'AvailSeat': availSeat,
-    'stopovers' : stopovers.map((e) => e.toJson()).toList()
+    'stopovers' : stopovers.map((e) => e.toJson()).toList(),
+    'Passport' : passport
   };
 }
 
