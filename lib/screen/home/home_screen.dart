@@ -1015,6 +1015,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<SearchFlightProvider>();
+      provider.setFromCity(
+        City(
+          cityCode: 'DEL',
+          city: 'Delhi',
+          country: 'India',
+        ),
+      );
+      provider.setToCity(
+        City(
+          cityCode: 'BOM',
+          city: 'Mumbai',
+          country: 'India',
+        ),
+      );
+    });
   }
 
   @override
@@ -1160,35 +1177,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildFromToTabs(SearchFlightProvider provider, BuildContext ctx) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFEDF0FF),
-        borderRadius: BorderRadius.circular(30),
+    return IgnorePointer(
+      ignoring: provider.isLoading,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFEDF0FF),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: TabBar(
+            controller: tabController,
+            labelStyle: kTextStyle.copyWith(color: Colors.white),
+            unselectedLabelColor: kPrimaryColor,
+            indicatorColor: kPrimaryColor,
+            labelColor: kWhite,
+            indicator:
+            const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              shape: BoxShape.rectangle,
+              color: kBlueColor,
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            onTap: (index) {
+              provider.setTripIndex(index);
+            },
+            tabs: [
+              Tab(text: lang.S
+                  .of(context)
+                  .tab1),
+              Tab(text: lang.S
+                  .of(context)
+                  .tab2),
+            ]),
       ),
-      child: TabBar(
-          controller: tabController,
-          labelStyle: kTextStyle.copyWith(color: Colors.white),
-          unselectedLabelColor: kPrimaryColor,
-          indicatorColor: kPrimaryColor,
-          labelColor: kWhite,
-          indicator:
-          const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-            shape: BoxShape.rectangle,
-            color: kBlueColor,
-          ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          onTap: (index) {
-            provider.setTripIndex(index);
-          },
-          tabs: [
-            Tab(text: lang.S
-                .of(context)
-                .tab1),
-            Tab(text: lang.S
-                .of(context)
-                .tab2),
-          ]),
     );
   }
 
@@ -1201,13 +1221,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             context, countryProvider, provider.fromCity, provider.setFromCity,
             lang.S
                 .of(context)
-                .fromTitle)),
+                .fromTitle, provider)),
         const SizedBox(width: 10),
         Expanded(child: _cityField(
             context, countryProvider, provider.toCity, provider.setToCity,
             lang.S
                 .of(context)
-                .toTitle)),
+                .toTitle, provider)),
       ],
     );
   }
@@ -1216,7 +1236,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CountryProvider cp,
       City? city,
       Function(City) onSelected,
-      String label,) {
+      String label,
+      SearchFlightProvider provider,
+      ) {
     return InputDecorator(
       decoration: kInputDecoration.copyWith(
         contentPadding: const EdgeInsets.only(left: 10.0),
@@ -1228,7 +1250,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ),
       child: ListTile(
-        onTap: () async {
+        onTap: provider.isLoading ? null :() async {
           final response = await Navigator.pushNamed(
               context, AppRoutes.search,);
 
@@ -1268,11 +1290,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         suffixIcon: const Icon(IconlyLight.calendar,
           color: kSubTitleColor,),
       ),
-      onTap: () async {
+      onTap: provider.isLoading ? null : () async {
         final dt = await showDatePicker(
           context: context,
-          initialDate: provider.selectedDate,
-          firstDate: DateTime(2000),
+          initialDate:provider.selectedDate.isBefore(DateTime.now())
+              ? DateTime.now()
+              : provider.selectedDate,
+          firstDate: DateTime.now(),
           lastDate: DateTime(2040),
         );
         if (dt != null) {
@@ -1313,7 +1337,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         floatingLabelBehavior: FloatingLabelBehavior.always,
         suffixIcon: const Icon(IconlyLight.calendar, color: kSubTitleColor),
       ),
-      onTap: () async {
+      onTap: provider.isLoading ? null :  () async {
         final dt = await showDatePicker(
           context: context,
           initialDate: provider.returnDate ?? provider.selectedDate.add(const Duration(days: 1)),
@@ -1346,6 +1370,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildPassengerField(SearchFlightProvider provider,
       BuildContext context) {
+    String passengerSummary = '';
+    if (provider.adultCount > 0) {
+      passengerSummary += '${provider.adultCount} Adult${provider.adultCount > 1 ? 's' : ''}';
+    }
+    if (provider.childCount > 0) {
+      if (passengerSummary.isNotEmpty) passengerSummary += ', ';
+      passengerSummary += '${provider.childCount} Child${provider.childCount > 1 ? 'ren' : ''}';
+    }
+    if (provider.infantCount > 0) {
+      if (passengerSummary.isNotEmpty) passengerSummary += ', ';
+      passengerSummary += '${provider.infantCount} Infant${provider.infantCount > 1 ? 's' : ''}';
+    }
+    if (passengerSummary.isEmpty) {
+      passengerSummary = 'Select Travellers';
+    }
     return TextFormField(
       readOnly: true,
       keyboardType: TextInputType.name,
@@ -1357,13 +1396,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             .of(context)
             .travellerTitle,
         labelStyle: kTextStyle.copyWith(color: kTitleColor),
-        hintText: provider.routeInfo,
+        hintText: passengerSummary,
         hintStyle: kTextStyle.copyWith(color: kSubTitleColor),
         border: const OutlineInputBorder(),
         floatingLabelBehavior: FloatingLabelBehavior.always,
         suffixIcon: const Icon(Icons.person),
       ),
-      onTap: () => _showPassengerSheet(context, provider),
+      onTap:  provider.isLoading ? null : () => _showPassengerSheet(context, provider),
     );
   }
 

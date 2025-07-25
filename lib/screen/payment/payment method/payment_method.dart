@@ -1,43 +1,123 @@
+import 'dart:convert';
+import 'package:flightbooking/api_services/configs/urls.dart';
 import 'package:flutter/material.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
-import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:http/http.dart' as http;
+import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../../api_services/api_request/post_request.dart';
+import '../../../api_services/configs/app_configs.dart';
 import '../../../widgets/button_global.dart';
 import '../../../widgets/constant.dart';
 import '../../home/home.dart';
 import '../../ticket status/ticket_status.dart';
 
 class PaymentMethod extends StatefulWidget {
-  const PaymentMethod({Key? key}) : super(key: key);
+  final String orderId;
+  final String amount;
+
+  const PaymentMethod({
+    Key? key,
+    required this.orderId,
+    required this.amount,
+  }) : super(key: key);
 
   @override
   State<PaymentMethod> createState() => _PaymentMethodState();
 }
 
 class _PaymentMethodState extends State<PaymentMethod> {
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  String cardNumber = '546787667938746';
-  String expiryDate = '05/31';
-  String cardHolderName = 'Ibne Riead';
-  String cvvCode = '736';
-  bool isCvvFocused = false;
-  bool isChecked = false;
+  final PostService _postService = PostService();
+  final WebViewController _controller = WebViewController();
+  bool isLoading = true;
+  String? paymentUrl;
 
-  void onCreditCardModelChange(CreditCardModel? creditCardModel) {
-    setState(() {
-      cardNumber = creditCardModel!.cardNumber;
-      expiryDate = creditCardModel.expiryDate;
-      cardHolderName = creditCardModel.cardHolderName;
-      cvvCode = creditCardModel.cvvCode;
-      isCvvFocused = creditCardModel.isCvvFocused;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _generatePaymentUrl();
+  }
+
+  Future<void> _generatePaymentUrl() async {
+
+    try {
+
+      final response = await _postService.postRequest(
+          endPoint: flightSearch,
+          body: {
+            "order_id":widget.orderId,
+            "amount" : widget.amount
+          },
+      requireAuth: false,
+        customHeaders: {
+          'action': 'countries',
+          'api-key' :  AppConfigs.apiKey
+        }
+      );
+
+      if (response["status"] == 200) {
+        final data = response;
+        paymentUrl = data["payment_url"];
+
+        if (paymentUrl != null) {
+          _controller
+            ..setJavaScriptMode(JavaScriptMode.unrestricted)
+            ..setNavigationDelegate(
+              NavigationDelegate(
+                onNavigationRequest: (navReq) {
+                  if (navReq.url.contains("payment-success")) {
+                    Future.microtask(() => showSuccessPopup());
+                    return NavigationDecision.prevent;
+                  } else if (navReq.url.contains("payment-failure")) {
+                    Future.microtask(() {
+                      toast('Payment failed, please try again.');
+                      Navigator.pop(context);
+                    });
+                    return NavigationDecision.prevent;
+                  }
+                  return NavigationDecision.navigate;
+                },
+              ),
+            )
+            ..loadRequest(Uri.parse(paymentUrl!));
+        }
+
+        setState(() => isLoading = false);
+      } else {
+        setState(() => isLoading = false);
+        toast("Failed to initialize payment");
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      toast("Something went wrong");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kWhite,
+      appBar: AppBar(
+        elevation: 0,
+        centerTitle: true,
+        backgroundColor: kBlueColor,
+        title: Text(lang.S.of(context).paymentMethod),
+        iconTheme: const IconThemeData(color: kWhite),
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : paymentUrl == null
+          ? const Center(child: Text("Unable to load payment page"))
+          : WebViewWidget(controller: _controller),
+    );
   }
 
   void showSuccessPopup() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -68,33 +148,29 @@ class _PaymentMethodState extends State<PaymentMethod> {
                   ),
                 ),
                 Text(
-                  'Thank you for purchase the ticket!',
+                  'Thank you for purchasing the ticket!',
                   textAlign: TextAlign.center,
                   style: kTextStyle.copyWith(color: kSubTitleColor),
                 ),
                 const SizedBox(height: 10.0),
                 ButtonGlobalWithoutIcon(
-                  buttontext: 'View Ticket ',
-                  buttonDecoration: kButtonDecoration.copyWith(color: kPrimaryColor),
+                  buttontext: 'View Ticket',
+                  buttonDecoration:
+                  kButtonDecoration.copyWith(color: kPrimaryColor),
                   onPressed: () {
-                    setState(() {
-                      finish(context);
-                      const TicketStatus().launch(context);
-                    });
+                    finish(context);
+                    const TicketStatus().launch(context);
                   },
                   buttonTextColor: kWhite,
                 ),
                 const SizedBox(height: 20.0),
                 GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     finish(context);
-
-                      const Home().launch(context);
-
+                    const Home().launch(context);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Icon(
                         FeatherIcons.arrowLeft,
@@ -102,7 +178,6 @@ class _PaymentMethodState extends State<PaymentMethod> {
                       ),
                       Text(
                         'Back to Home',
-                        textAlign: TextAlign.center,
                         style: kTextStyle.copyWith(color: kSubTitleColor),
                       ),
                     ],
@@ -113,134 +188,6 @@ class _PaymentMethodState extends State<PaymentMethod> {
           ),
         );
       },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kWhite,
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        backgroundColor: kBlueColor,
-        title: Text(lang.S.of(context).paymentMethod),
-        iconTheme: const IconThemeData(color: kWhite),
-      ),
-      body: Container(
-        padding: const EdgeInsets.all(10.0),
-        decoration: const BoxDecoration(
-          color: kWhite,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30.0),
-            topRight: Radius.circular(30.0),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10.0),
-            Text(
-              lang.S.of(context).paymentCardTitle,
-              style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
-            ),
-            CreditCardWidget(
-              // padding: AppConstants.creditCardPadding,
-              backgroundImage: 'images/card1.png',
-              textStyle: kTextStyle.copyWith(fontSize: 10.0, color: Colors.white),
-              cardNumber: cardNumber,
-              expiryDate: expiryDate,
-              cardHolderName: cardHolderName,
-              cvvCode: cvvCode,
-              showBackView: isCvvFocused,
-              obscureCardNumber: true,
-              obscureCardCvv: true,
-              isHolderNameVisible: true,
-              cardBgColor: Colors.deepOrangeAccent,
-              isSwipeGestureEnabled: true,
-              onCreditCardWidgetChange: (CreditCardBrand creditCardBrand) {},
-            ),
-            Row(
-              children: [
-                Checkbox(
-                  activeColor: kPrimaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(2.0),
-                  ),
-                  value: isChecked,
-                  onChanged: (val) {
-                    setState(
-                      () {
-                        isChecked = val!;
-                      },
-                    );
-                  },
-                ),
-                Text(
-                  'Use as the payment methord',
-                  style: kTextStyle.copyWith(color: kTitleColor),
-                ),
-              ],
-            ),
-            CreditCardWidget(
-              padding: 5,
-              backgroundImage: 'images/card1.png',
-              textStyle: kTextStyle.copyWith(fontSize: 10.0, color: Colors.white),
-              cardNumber: cardNumber,
-              expiryDate: expiryDate,
-              cardHolderName: cardHolderName,
-              cvvCode: cvvCode,
-              showBackView: isCvvFocused,
-              obscureCardNumber: true,
-              obscureCardCvv: true,
-              isHolderNameVisible: true,
-              cardBgColor: Colors.deepOrangeAccent,
-              isSwipeGestureEnabled: true,
-              onCreditCardWidgetChange: (CreditCardBrand creditCardBrand) {},
-            ),
-            Row(
-              children: [
-                Checkbox(
-                  activeColor: kPrimaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(2.0),
-                  ),
-                  value: isChecked,
-                  onChanged: (val) {
-                    setState(
-                      () {
-                        isChecked = val!;
-                      },
-                    );
-                  },
-                ),
-                Text(
-                  'Use as the payment method',
-                  style: kTextStyle.copyWith(color: kTitleColor),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: kWhite,
-        ),
-        child: ButtonGlobalWithoutIcon(
-          buttontext: 'Pay',
-          buttonDecoration: kButtonDecoration.copyWith(
-            color: kPrimaryColor,
-            borderRadius: BorderRadius.circular(30.0),
-          ),
-          onPressed: () {
-            setState(() {
-              showSuccessPopup();
-            });
-          },
-          buttonTextColor: kWhite,
-        ),
-      ),
     );
   }
 }

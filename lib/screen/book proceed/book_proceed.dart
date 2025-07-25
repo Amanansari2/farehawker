@@ -52,6 +52,7 @@ class _BookProceedState extends State<BookProceed> {
               TravellerDetailsCard(
                 onAddTraveller: () => _showAddTravellerModal(context),
               ),
+              if (widget.flight.passport == true)
               PassportDetailsCard(
                 onAddPassport:() => _showAddPassportModal(context),
               )
@@ -231,7 +232,7 @@ class BookProceedBottomBar extends StatelessWidget {
                      Navigator.push(
                        context,
                        MaterialPageRoute(
-                         builder: (_) => const Payment(),
+                         builder: (_) =>  Payment(onwardFlight: flight,),
                        ),
                      );
                    }
@@ -308,8 +309,13 @@ class BaggagePolicyCard extends StatelessWidget {
                       builder: (_) => const BaggageModal(),
                     );
                   },
-                  child: const Icon(FeatherIcons.chevronRight,
-                      color: kPrimaryColor),
+                  child: Text(
+                    "View Details",
+                    style:  kTextStyle.copyWith(
+                        color: kPrimaryColor, fontWeight: FontWeight.bold, )
+
+
+                  ),
                 ),
               ],
             ),
@@ -389,7 +395,7 @@ class BaggageModal extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    Text('Refund & Baggage Policy',
+                    Text('Flight Rules',
                         style: kTextStyle.copyWith(
                             color: kTitleColor, fontWeight: FontWeight.bold)),
                     const Spacer(),
@@ -761,39 +767,42 @@ class BookingDetailsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bookProvider = context.watch<BookProceedProvider>();
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('Booking details will be sent to',
-                  style: kTextStyle.copyWith(
-                      color: kTitleColor, fontWeight: FontWeight.bold)),
-              const Spacer(),
-              GestureDetector(
-                  onTap: onEdit,
-                  child: const Icon(FeatherIcons.chevronRight,
-                      color: kPrimaryColor)),
-            ],
-          ),
-          ListTile(
-            leading: _icon(Icons.email),
-            title: Text(
-                bookProvider.email.isNotEmpty
-                    ? bookProvider.email
-                    : 'Add Email',
-                style: kTextStyle.copyWith(color: kSubTitleColor)),
-          ),
-          ListTile(
-            leading: _icon(Icons.phone),
-            title: Text(  bookProvider.phone.isNotEmpty
-                ? bookProvider.phone
-                : 'Add Mobile Number',
-                style: kTextStyle.copyWith(color: kPrimaryColor)),
-          ),
-          const Divider(thickness: 1, color: kBorderColorTextField),
-        ],
+    return GestureDetector(
+      onTap: onEdit,
+      child: _card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('Booking details will be sent to',
+                    style: kTextStyle.copyWith(
+                        color: kTitleColor, fontWeight: FontWeight.bold)),
+                const Spacer(),
+                Text('Add Details',
+                    style: kTextStyle.copyWith(
+                        color: kPrimaryColor, fontWeight: FontWeight.bold)),
+
+              ],
+            ),
+            ListTile(
+              leading: _icon(Icons.email),
+              title: Text(
+                  bookProvider.email.isNotEmpty
+                      ? bookProvider.email
+                      : 'Add Email',
+                  style: kTextStyle.copyWith(color: kSubTitleColor)),
+            ),
+            ListTile(
+              leading: _icon(Icons.phone),
+              title: Text(  bookProvider.phone.isNotEmpty
+                  ? bookProvider.phone
+                  : 'Add Mobile Number',
+                  style: kTextStyle.copyWith(color: kPrimaryColor)),
+            ),
+            const Divider(thickness: 1, color: kBorderColorTextField),
+          ],
+        ),
       ),
     );
   }

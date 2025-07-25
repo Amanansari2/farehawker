@@ -1,5 +1,4 @@
 import 'package:community_material_icon/community_material_icon.dart';
-import 'package:flightbooking/screen/profile/payments/paymetns.dart';
 import 'package:flightbooking/screen/profile/setting/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
@@ -147,41 +146,7 @@ physics:  const BouncingScrollPhysics(),
                 ),
               ),
               const SizedBox(height: 10),
-              Card(
-                elevation: 1.3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: const BorderSide(color: kBorderColorTextField, width: 0.5),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.only(left: 10.0, right: 10.0),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePayments()));
-                  },
-                  leading: Container(
-                    height: 34,
-                    width: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: kPrimaryColor.withOpacity(0.2),
-                    ),
-                    child: const Icon(
-                      Icons.payment_rounded,
-                      color: kPrimaryColor,
-                    ),
-                  ),
-                  title: Text(
-                    'Payments',
-                    style: kTextStyle.copyWith(color: kTitleColor),
-                  ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 18,
-                    color: kSubTitleColor,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
+
               Card(
                 elevation: 1.3,
                 shape: RoundedRectangleBorder(

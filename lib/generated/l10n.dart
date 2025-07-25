@@ -851,7 +851,7 @@ class S {
   /// `Baggage Policy`
   String get bagPolicyTitle {
     return Intl.message(
-      'Baggage Policy',
+      'Baggage, Cancellation & Refund Policy',
       name: 'bagPolicyTitle',
       desc: '',
       args: [],

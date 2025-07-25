@@ -9,9 +9,12 @@ import '../../models/airline_list_model.dart';
 import '../../models/airport_list_model.dart';
 import '../../models/flight_details_model.dart';
 import '../../providers/country_provider.dart';
+import '../../providers/fare_rule_provider.dart';
 import '../../providers/search_flight_provider.dart';
+import '../../routes/route_generator.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
+import '../../widgets/custom_dialog.dart';
 import '../book proceed/book_proceed.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
 
@@ -377,6 +380,8 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
     );
   }
 
+
+
   Widget _buildTimelineSegment({
     required String time,
     required String location,
@@ -480,6 +485,7 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
   }
 
   Widget _buildBottomBar() {
+    final totalFare = (widget.flight.fare ?? 0) + (widget.returnFlight?.fare ?? 0);
     return Container(
       decoration: const BoxDecoration(color: kWhite),
       child: ListTile(
@@ -490,7 +496,7 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
           style: kTextStyle.copyWith(color: kSubTitleColor),
         ),
         subtitle: Text(
-          ' $currencySign${widget.flight.fare}',
+          ' $currencySign$totalFare',
           style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold),
         ),
         trailing: SizedBox(
@@ -502,9 +508,42 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
               color: kPrimaryColor,
               borderRadius: BorderRadius.circular(30.0),
             ),
-            onPressed: () {
-              // const BookProceed().launch(context);
+            onPressed: () async {
+              final fareProvider = context.read<BookProceedProvider>();
+              await fareProvider.loadFareRulesForRoundTrip(
+                onwardFlight: widget.flight,
+                returnFlight: widget.returnFlight!,
+              );
+
+              if (fareProvider.error != null) {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return CustomDialogBox(
+                      title: "Error",
+                      descriptions: fareProvider.error,
+                      text: "Close",
+                      titleColor: kRedColor,
+                      img: 'images/dialog_error.png',
+                      functionCall: () {
+                        Navigator.of(context).pop(); // close dialog
+                      },
+                    );
+                  },
+                );
+              } else {
+                // ✅ success → navigate
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.roundTripBookProceed,
+                  arguments: {
+                    'onwardFlight': widget.flight,
+                    'returnFlight': widget.returnFlight
+                  },
+                );
+              }
             },
+
             buttonTextColor: kWhite,
           ),
         ),

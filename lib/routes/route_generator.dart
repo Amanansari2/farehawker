@@ -3,6 +3,7 @@ import 'package:flightbooking/screen/Authentication/splash%20screen/onboard.dart
 import 'package:flightbooking/screen/Authentication/splash%20screen/splash_screen.dart';
 import 'package:flightbooking/screen/Authentication/welcome_screen.dart';
 import 'package:flightbooking/screen/book%20proceed/book_proceed.dart';
+import 'package:flightbooking/screen/book%20proceed/round_trip_book_proceed.dart';
 import 'package:flightbooking/screen/profile/setting/notification.dart';
 import 'package:flightbooking/screen/search/filter.dart';
 import 'package:flightbooking/screen/search/flight_details.dart';
@@ -31,6 +32,7 @@ class AppRoutes {
   static const String flightDetails = "/FlightDetails";
   static const String roundTripFlightDetails = "/RoundTripFlightDetails";
   static const String bookProceed = "/BookProceed";
+  static const String roundTripBookProceed = "/RoundTripBookProceed";
 }
 
 
@@ -73,6 +75,7 @@ class RouteGenerator {
         }
         return _errorRoute("Invalid or missing FlightDetails ");
 
+
       case AppRoutes.roundTripFlightDetails:
         final args = settings.arguments;
         if(args is Map<String, dynamic>){
@@ -88,6 +91,7 @@ class RouteGenerator {
         }
           return _errorRoute("Invalid round trip Details");
 
+
       case AppRoutes.bookProceed:
         final args = settings.arguments;
         if(args is FlightDetail){
@@ -95,6 +99,22 @@ class RouteGenerator {
               builder: (_) => BookProceed(flight: args));
         }
         return _errorRoute("Invalid or Missing Information");
+
+      case AppRoutes.roundTripBookProceed:
+        final args = settings.arguments;
+        if(args is Map<String, dynamic>){
+          final onward = args['onwardFlight'];
+          final returnF = args['returnFlight'];
+          if(onward is FlightDetail && returnF is FlightDetail){
+            return MaterialPageRoute(
+                builder: (_) => RoundTripBookProceed(
+                  onwardFlight: onward,
+                  returnFlight: returnF,
+                ));
+          }
+        }
+        return _errorRoute("Invalid or Missing RoundTripBookProceed arguments");
+
 
       default:
         AppLogger.log('⚠️ Route not found: ${settings.name}');

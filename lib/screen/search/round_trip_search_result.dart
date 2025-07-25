@@ -25,6 +25,10 @@ class RoundTripSearchResult extends StatefulWidget {
 
 class _RoundTripSearchResultState extends State<RoundTripSearchResult>
     with TickerProviderStateMixin {
+
+  late TabController _tabController;
+
+
   late final ScrollController _onwardScrollController;
   late final ScrollController _returnScrollController;
 
@@ -42,6 +46,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _onwardScrollController = ScrollController()
       ..addListener(_onwardScrollListener);
     _returnScrollController = ScrollController()
@@ -88,6 +93,7 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
 
   @override
   void dispose() {
+    _tabController.dispose();
     _onwardScrollController.dispose();
     _returnScrollController.dispose();
     super.dispose();
@@ -99,216 +105,215 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
     final isApplyEnabled =
         selectedOnwardFlight != null && selectedReturnFlight != null;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: kWhite,
-        appBar: AppBar(
-            titleSpacing: 0,
-            elevation: 0,
-            backgroundColor: kBlueColor,
-            iconTheme: const IconThemeData(color: kWhite),
-            title: ListTile(
-              dense: true,
-              visualDensity: const VisualDensity(vertical: -2),
-              horizontalTitleGap: 0.0,
-              contentPadding: const EdgeInsets.only(right: 15.0),
-              title: Text(
-                '${provider.fromCity?.city ?? ''} - ${provider.toCity?.city ?? ''}',
-                style: kTextStyle.copyWith(
-                    color: kWhite, fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                '${DateFormat('EEE d MMM').format(provider.selectedDate)} | ${provider.adultCount} Adult, ${provider.childCount} Child, ${provider.infantCount} Infant',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: kTextStyle.copyWith(color: kWhite),
-              ),
+    return Scaffold(
+      backgroundColor: kWhite,
+      appBar: AppBar(
+          titleSpacing: 0,
+          elevation: 0,
+          backgroundColor: kBlueColor,
+          iconTheme: const IconThemeData(color: kWhite),
+          title: ListTile(
+            dense: true,
+            visualDensity: const VisualDensity(vertical: -2),
+            horizontalTitleGap: 0.0,
+            contentPadding: const EdgeInsets.only(right: 15.0),
+            title: Text(
+              '${provider.fromCity?.city ?? ''} - ${provider.toCity?.city ?? ''}',
+              style: kTextStyle.copyWith(
+                  color: kWhite, fontWeight: FontWeight.bold),
             ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(60),
-              child: Container(
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEDF0FF),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: const TabBar(
-                  indicator: BoxDecoration(
-                    color: kPrimaryColor,
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelColor: kWhite,
-                  unselectedLabelColor: kBlueColor,
-                  tabs: [
-                    Tab(text: 'Onward'),
-                    Tab(text: 'Return'),
-                  ],
-                ),
-              ),
-            )),
-        body: provider.isLoading && provider.onwardFlights.isEmpty && provider.returnFlights.isEmpty
-        ?  ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: 10,
-          itemBuilder: (_, __) => const ShimmerSearchResultFlightCard(),
-        )
-        :Column(
-          children: [
-            const SizedBox(height: 10),
-            HorizontalList(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: filterTitleList.length,
-              physics: const BouncingScrollPhysics(),
-              itemBuilder: (_, i) {
-
-                final filterProvider = context.watch<FilterProvider>();
-
-                final bool isSelected = (){
-                  switch (filterTitleList[i]){
-                    case 'Non Stop':
-                      return filterProvider.selectedStopOption == 'nonStop';
-                    case 'Up to 1 Stop':
-                      return filterProvider.selectedStopOption == 'oneStop';
-                    case 'All Available':
-                      return filterProvider.selectedStopOption == 'all';
-                    default:
-                      return false;
-                  }
-                }();
-
-               return  GestureDetector(
-                  onTap: ()async  {
-
-
-
-                    if(i == 0){
-                      Navigator.pushNamed(context, AppRoutes.filter);
-                      return;
-                    }
-
-                    String mappedValue;
-
-                    if(filterTitleList[i] == 'Non Stop'){
-                      mappedValue = 'nonStop';
-                    } else if(filterTitleList[i] == 'Up to 1 Stop'){
-                      mappedValue = 'oneStop';
-                    }else{
-                      mappedValue = 'all';
-                    }
-
-                    context.read<FilterProvider>().selectStopOption(mappedValue);
-
-                    final stopOptionsForApi = mappedValue == 'all' ? null : mappedValue;
-                    final departureTime = filterProvider.selectedDepartureTime;
-                    final selectedAirlines = filterProvider.selectedAirlines.isNotEmpty
-                        ? filterProvider.selectedAirlines.join(',')
-                        : null;
-                    final refundableOption = filterProvider.selectedRefundableOptions;
-                    final classOptions = filterProvider.selectedClassOptions;
-
-                    final searchProvider = context.read<SearchFlightProvider>();
-                    final countryProvider = context.read<CountryProvider>();
-
-                    await searchProvider.searchRoundTripFlight(
-                        filterProvider: context.read<FilterProvider>(),
-                        countryProvider: countryProvider,
-                      stopOption: stopOptionsForApi,
-                      departureTime: departureTime,
-                      selectedAirlines: selectedAirlines,
-                      refundableOption: refundableOption,
-                      classOptions: classOptions,
-                    );
-
-                  },
-                  child: Container(
-                    height: 35,
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? kPrimaryColor.withOpacity(0.1)
-                          : kWhite,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: kBorderColorTextField),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.sort, color: kSubTitleColor)
-                            .visible(i == 0),
-                        const SizedBox(width: 5).visible(i == 0),
-                        Text(filterTitleList[i],
-                            style: kTextStyle.copyWith(color: kSubTitleColor)),
-                      ],
-                    ),
-                  ),
-                );
-
-              }
+            subtitle: Text(
+              '${DateFormat('EEE d MMM').format(provider.selectedDate)} | ${provider.adultCount} Adult, ${provider.childCount} Child, ${provider.infantCount} Infant',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: kTextStyle.copyWith(color: kWhite),
             ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _buildFlightList(
-                    flights: provider.onwardFlights,
-                    isLoadingMore: provider.isLoadingMore,
-                    controller: _onwardScrollController,
-                    fromCity: provider.fromCity?.city ?? '',
-                    toCity: provider.toCity?.city ?? '',
-                    isReturn: false,
-                    isOnwardTab: true,
-                  ),
-                  _buildFlightList(
-                    flights: provider.returnFlights,
-                    isLoadingMore: provider.returnIsLoadingMore,
-                    controller: _returnScrollController,
-                    fromCity: provider.toCity?.city ?? '',
-                    toCity: provider.fromCity?.city ?? '',
-                    isReturn: true,
-                    isOnwardTab: false,
-                  ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: Container(
+              margin:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEDF0FF),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child:  TabBar(
+                controller: _tabController,
+                indicator: const BoxDecoration(
+                  color: kPrimaryColor,
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: kWhite,
+                unselectedLabelColor: kBlueColor,
+                tabs: [
+                  Tab(text: 'Onward'),
+                  Tab(text: 'Return'),
                 ],
               ),
             ),
-          ],
-        ),
-        bottomNavigationBar: isApplyEnabled
-            ? SafeArea(
+          )),
+      body: provider.isLoading && provider.onwardFlights.isEmpty && provider.returnFlights.isEmpty
+      ?  ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: 10,
+        itemBuilder: (_, __) => const ShimmerSearchResultFlightCard(),
+      )
+      :Column(
+        children: [
+          const SizedBox(height: 10),
+          HorizontalList(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            itemCount: filterTitleList.length,
+            physics: const BouncingScrollPhysics(),
+            itemBuilder: (_, i) {
+
+              final filterProvider = context.watch<FilterProvider>();
+
+              final bool isSelected = (){
+                switch (filterTitleList[i]){
+                  case 'Non Stop':
+                    return filterProvider.selectedStopOption == 'nonStop';
+                  case 'Up to 1 Stop':
+                    return filterProvider.selectedStopOption == 'oneStop';
+                  case 'All Available':
+                    return filterProvider.selectedStopOption == 'all';
+                  default:
+                    return false;
+                }
+              }();
+
+             return  GestureDetector(
+                onTap: ()async  {
+
+
+
+                  if(i == 0){
+                    Navigator.pushNamed(context, AppRoutes.filter);
+                    return;
+                  }
+
+                  String mappedValue;
+
+                  if(filterTitleList[i] == 'Non Stop'){
+                    mappedValue = 'nonStop';
+                  } else if(filterTitleList[i] == 'Up to 1 Stop'){
+                    mappedValue = 'oneStop';
+                  }else{
+                    mappedValue = 'all';
+                  }
+
+                  context.read<FilterProvider>().selectStopOption(mappedValue);
+
+                  final stopOptionsForApi = mappedValue == 'all' ? null : mappedValue;
+                  final departureTime = filterProvider.selectedDepartureTime;
+                  final selectedAirlines = filterProvider.selectedAirlines.isNotEmpty
+                      ? filterProvider.selectedAirlines.join(',')
+                      : null;
+                  final refundableOption = filterProvider.selectedRefundableOptions;
+                  final classOptions = filterProvider.selectedClassOptions;
+
+                  final searchProvider = context.read<SearchFlightProvider>();
+                  final countryProvider = context.read<CountryProvider>();
+
+                  await searchProvider.searchRoundTripFlight(
+                      filterProvider: context.read<FilterProvider>(),
+                      countryProvider: countryProvider,
+                    stopOption: stopOptionsForApi,
+                    departureTime: departureTime,
+                    selectedAirlines: selectedAirlines,
+                    refundableOption: refundableOption,
+                    classOptions: classOptions,
+                  );
+
+                },
                 child: Container(
-                color: kWhite,
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                        context,
-                        AppRoutes.roundTripFlightDetails,
-                        arguments: {
-                          'onwardFlight' : selectedOnwardFlight!,
-                          'returnFlight' : selectedReturnFlight!,
-                        }
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kPrimaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  height: 35,
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? kPrimaryColor.withOpacity(0.1)
+                        : kWhite,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: kBorderColorTextField),
                   ),
-                  child: const Text(
-                    'View Details',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.sort, color: kSubTitleColor)
+                          .visible(i == 0),
+                      const SizedBox(width: 5).visible(i == 0),
+                      Text(filterTitleList[i],
+                          style: kTextStyle.copyWith(color: kSubTitleColor)),
+                    ],
                   ),
                 ),
-              ))
-            : null,
+              );
+
+            }
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildFlightList(
+                  flights: provider.onwardFlights,
+                  isLoadingMore: provider.isLoadingMore,
+                  controller: _onwardScrollController,
+                  fromCity: provider.fromCity?.city ?? '',
+                  toCity: provider.toCity?.city ?? '',
+                  isReturn: false,
+                  isOnwardTab: true,
+                ),
+                _buildFlightList(
+                  flights: provider.returnFlights,
+                  isLoadingMore: provider.returnIsLoadingMore,
+                  controller: _returnScrollController,
+                  fromCity: provider.toCity?.city ?? '',
+                  toCity: provider.fromCity?.city ?? '',
+                  isReturn: true,
+                  isOnwardTab: false,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
+      bottomNavigationBar: isApplyEnabled
+          ? SafeArea(
+              child: Container(
+              color: kWhite,
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(
+                      context,
+                      AppRoutes.roundTripFlightDetails,
+                      arguments: {
+                        'onwardFlight' : selectedOnwardFlight!,
+                        'returnFlight' : selectedReturnFlight!,
+                      }
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'View Details',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ))
+          : null,
     );
   }
 
@@ -369,8 +374,10 @@ class _RoundTripSearchResultState extends State<RoundTripSearchResult>
           setState(() {
             if (isOnwardTab) {
               selectedOnwardFlight = flight;
+              _tabController.animateTo(1);
             } else {
               selectedReturnFlight = flight;
+              _tabController.animateTo(0);
             }
           });
         },

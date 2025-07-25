@@ -1,3 +1,4 @@
+import 'package:flightbooking/api_services/app_logger.dart';
 import 'package:flightbooking/providers/search_flight_provider.dart';
 import 'package:flightbooking/widgets/constant.dart';
 import 'package:flutter/cupertino.dart';
@@ -50,6 +51,67 @@ class BookProceedProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ==================== Fare Rules for return flight =========================
+  String? _onwardFareRulesContent;
+  String? _returnFareRulesContent;
+
+  String? get onwardFareRulesContent => _onwardFareRulesContent;
+  String? get returnFareRulesContent => _returnFareRulesContent;
+
+  Future<void> loadFareRulesForRoundTrip({
+    required FlightDetail onwardFlight,
+    required FlightDetail returnFlight
+}) async {
+    _isLoading = true;
+    _error = null;
+    _onwardFareRulesContent = null;
+    _returnFareRulesContent = null;
+    notifyListeners();
+
+    try {
+      // Onward
+      if (onwardFlight.source == 'TBO') {
+        _onwardFareRulesContent = await repository.fetchTboFareRulesHtml(
+          source: onwardFlight.source,
+          traceId: onwardFlight.traceID,
+          flightId: onwardFlight.flightID,
+          resultIndex: onwardFlight.resultIndex,
+        );
+      } else if (onwardFlight.source == 'AirIQ') {
+        _onwardFareRulesContent = await repository.fetchAirIqFareRulesText(
+          source: onwardFlight.source,
+          traceId: onwardFlight.traceID,
+          flightId: onwardFlight.flightID,
+          resultIndex: onwardFlight.resultIndex,
+        );
+      }
+
+      // Return
+      if (returnFlight.source == 'TBO') {
+        _returnFareRulesContent = await repository.fetchTboFareRulesHtml(
+          source: returnFlight.source,
+          traceId: returnFlight.traceID,
+          flightId: returnFlight.flightID,
+          resultIndex: returnFlight.resultIndex,
+        );
+      } else if (returnFlight.source == 'AirIQ') {
+        _returnFareRulesContent = await repository.fetchAirIqFareRulesText(
+          source: returnFlight.source,
+          traceId: returnFlight.traceID,
+          flightId: returnFlight.flightID,
+          resultIndex: returnFlight.resultIndex,
+        );
+      }
+    }catch(e){
+      AppLogger.log('Error loading fare rules: $e');
+      _error = 'Failed to load fare rules: ${e.toString()}';
+      _error = e.toString();
+    }finally{
       _isLoading = false;
       notifyListeners();
     }
@@ -425,6 +487,67 @@ class BookProceedProvider extends ChangeNotifier {
   }
 
 
+  // ==================== Payload RoundTrip =========================
+
+  Map<String, dynamic> buildRoundTripBookingPayload({
+    required FlightDetail onwardFlight,
+    required FlightDetail returnFlight,
+    required SearchFlightProvider searchProvider,
+  }) {
+    String formatDate(DateTime date) {
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      final yearTwoDigits = date.year.toString().substring(2);
+      return "${date.day.toString().padLeft(2, '0')}-${months[date.month - 1]}-$yearTwoDigits";
+    }
+
+    final fname = _travellers.map((t) => t.firstName).toList();
+    final lname = _travellers.map((t) => t.lastName).toList();
+    final gender = _travellers.map((t) => t.gender).toList();
+    final dob = _travellers
+        .map((t) => t.dateOfBirth.toIso8601String().split('T').first)
+        .toList();
+
+    final passportNo = _passports.map((p) => p.passportNumber).toList();
+    final passportExpiry = _passports.map((p) {
+      return DateFormat('yyyy-MM-dd').format(p.passportExpiry);
+    }).toList();
+
+    if (searchProvider.returnDate == null) {
+      throw Exception('Return date is missing');
+    }
+
+    // ✅ format both dates
+    final onwardDate = formatDate(searchProvider.selectedDate);
+    final returnDate = formatDate(searchProvider.returnDate!);
+
+    return {
+      "f_destination": onwardFlight.destination ?? '',
+      "f_origin": onwardFlight.origin ?? '',
+      "date": onwardDate,
+      "round_date": returnDate,
+      "adlt": searchProvider.adultCount.toString(),
+      "child": searchProvider.childCount.toString(),
+      "inft": searchProvider.infantCount.toString(),
+      "email": _email,
+      "phone": _phone,
+      "country_code": _countryCode,
+      "flight_type": "roundTrip",
+      "trace_id": onwardFlight.traceID,
+      "result_index": onwardFlight.resultIndex,
+      "result_index2": returnFlight.resultIndex,
+      "fname": fname,
+      "lname": lname,
+      "gender": gender,
+      "dob": dob,
+      "passport_no": passportNo,
+      "passport_expiry": passportExpiry,
+    };
+  }
+
+
   Future<Map<String, dynamic>> submitBookingData({
     required BuildContext context,
     required FlightDetail flight,
@@ -438,10 +561,14 @@ class BookProceedProvider extends ChangeNotifier {
       throw Exception('No travellers added');
     }
 
-    if (_passports.length != _travellers.length) {
-      _showPassportError(context,
-          'Total passports (${_passports.length}) must equal the total passenger count (${_travellers.length}).');
-      throw Exception('Passport count mismatch');
+    if (flight.passport == true) {
+      if (_passports.length != _travellers.length) {
+        _showPassportError(
+          context,
+          'Total passports (${_passports.length}) must equal the total passenger count (${_travellers.length}).',
+        );
+        throw Exception('Passport count mismatch');
+      }
     }
 
 
@@ -470,5 +597,59 @@ class BookProceedProvider extends ChangeNotifier {
     }
 
   }
+
+
+  Future<Map<String, dynamic>> submitRoundTripBookingData({
+    required BuildContext context,
+    required FlightDetail onwardFlight,
+    required FlightDetail returnFlight,
+    required SearchFlightProvider searchProvider,
+  }) async {
+    // 🔹 Validate basic details
+    if (!validateBookingDetails(context)) {
+      throw Exception('Invalid booking details');
+    }
+    if (_travellers.isEmpty) {
+      _showError(context, 'Please add at least one traveller.');
+      throw Exception('No travellers added');
+    }
+    if (onwardFlight.passport == true || returnFlight.passport == true) {
+      if (_passports.length != _travellers.length) {
+        _showPassportError(
+          context,
+          'Total passports (${_passports.length}) must equal the total passenger count (${_travellers.length}).',
+        );
+        throw Exception('Passport count mismatch');
+      }
+    }
+
+    final totalRequired = searchProvider.adultCount +
+        searchProvider.childCount +
+        searchProvider.infantCount;
+
+    if (_travellers.length != totalRequired) {
+      _showError(
+        context,
+        'Total travellers (${_travellers.length}) must equal the total passenger count ($totalRequired).',
+      );
+      throw Exception('Traveller count mismatch');
+    }
+
+    // 🔹 Build round trip payload
+    final payload = buildRoundTripBookingPayload(
+      onwardFlight: onwardFlight,
+      returnFlight: returnFlight,
+      searchProvider: searchProvider,
+    );
+
+    // 🔹 Submit to repository
+    try {
+      final response = await repository.submitBooking(payload);
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
 
 }
