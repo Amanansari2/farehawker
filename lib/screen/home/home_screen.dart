@@ -4,6 +4,7 @@ import 'package:flightbooking/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
 import 'package:provider/provider.dart';
@@ -13,6 +14,7 @@ import '../../models/country_list_model.dart';
 import '../../models/search_result_arguments.dart';
 import '../../providers/country_provider.dart';
 import '../../providers/filter_provider.dart';
+import '../../providers/login_provider.dart';
 import '../../routes/route_generator.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
@@ -1009,6 +1011,7 @@ class HomeScreen extends StatefulWidget {
 
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final box = GetStorage();
   late TabController tabController;
 
   @override
@@ -1095,7 +1098,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               const SizedBox(height: 50),
                               GestureDetector(
                                 onTap: (){
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) =>const TestShimmerScreen()));
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const TestShimmerScreen()));
                                 },
                                 child: const Text("Testing Shimmer ", style: TextStyle(fontSize: 25),),
                               )
@@ -1112,6 +1115,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
 
   Widget _buildHeader(BuildContext context) {
+    final loginProvider = Provider.of<LoginProvider>(context);
+    final user = loginProvider.user;
+
+    final userName = user?['name'] ?? 'Guest';
+    final userLastName = user?['lname'] ?? '';
+
     return Stack(
       alignment: Alignment.topLeft,
       children: [
@@ -1136,7 +1145,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
                   child: const CircleAvatar(
                     radius: 22,
-                    backgroundImage: AssetImage('images/profile1.png'),
+                     backgroundImage: AssetImage('images/logo/applogo.png'),
                   ),
                 ),
                 title: GestureDetector(
@@ -1146,10 +1155,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       .welcome,
                       style: kTextStyle.copyWith(color: kWhite, fontSize: 14)),
                 ),
-                subtitle: Text(
-                  'Test User',
-                  style: kTextStyle.copyWith(
-                      color: kWhite, fontWeight: FontWeight.bold),),
+                subtitle: GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                  child: Text(
+                    "$userName $userLastName",
+                    style: kTextStyle.copyWith(
+                        color: kWhite, fontWeight: FontWeight.bold),),
+                ),
                 trailing: GestureDetector(
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.notification),

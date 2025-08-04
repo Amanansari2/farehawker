@@ -116,8 +116,11 @@
 
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flightbooking/api_services/app_logger.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_storage/get_storage.dart';
 import '../logging_service.dart';
 import '../configs/urls.dart';
@@ -137,7 +140,16 @@ class PostService {
 
       },
     ),
-  );
+  ){
+   if(kDebugMode){
+     (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+     (HttpClient client){
+       client.badCertificateCallback =
+       (X509Certificate cert, String host, int port) => true;
+       return client;
+     };
+   }
+}
 
   Future<Map<String, dynamic>> postRequest({
     required String endPoint,
@@ -147,13 +159,13 @@ class PostService {
   }) async {
 
     final headers = <String, String>{
-      'Content-Type': 'application/json',
+      'token' : "",
     };
 
     if (requireAuth) {
-      final token = _box.read("auth_token");
+      final token = _box.read("token");
       if (token != null && token.toString().isNotEmpty) {
-        headers["Authorization"] = "Bearer $token";
+        headers["token"] = "$token";
       }
     }
 

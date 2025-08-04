@@ -1,10 +1,11 @@
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:flightbooking/providers/update_profile_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'dart:io';
+import 'package:provider/provider.dart';
+import '../../../providers/login_provider.dart';
 import '../../../widgets/constant.dart';
-import 'edit_profile.dart';
 
 class MyProfile extends StatefulWidget {
   const MyProfile({Key? key}) : super(key: key);
@@ -14,16 +15,26 @@ class MyProfile extends StatefulWidget {
 }
 
 class _MyProfileState extends State<MyProfile> {
- // final ImagePicker _picker = ImagePicker();
-  XFile? image;
+  final box = GetStorage();
 
-  // Future<void> getImage() async {
-  //   image = await _picker.pickImage(source: ImageSource.gallery);
-  //   setState(() {});
-  // }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+      final updateProvider = Provider.of<UpdateProfileProvider>(context, listen: false);
+
+      if (loginProvider.user != null) {
+        updateProvider.prefillProfileData(loginProvider.user!);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final loginProvider = Provider.of<LoginProvider>(context);
+    final updateProfileProvider = Provider.of<UpdateProfileProvider>(context);
     return Scaffold(
       backgroundColor: kWhite,
       bottomNavigationBar: Container(
@@ -47,15 +58,10 @@ class _MyProfileState extends State<MyProfile> {
                   backgroundColor: kPrimaryColor,
                 ),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EditProfile(),
-                    ),
-                  );
+                 updateProfileProvider.submitUpdateSignUpForm(context);
                 },
                 child: Text(
-                  'Edit',
+                  'Update Profile',
                   style: kTextStyle.copyWith(color: kWhite),
                 ),
               ),
@@ -76,131 +82,231 @@ class _MyProfileState extends State<MyProfile> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Container(
-          height: context.height(),
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            color: kWhite,
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(30),
-              topLeft: Radius.circular(30),
+        child: Column(
+          children: [
+            _buildInformationSection(loginProvider, context),
+            const Divider(),
+            _buildUpdateForm(updateProfileProvider, context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInformationSection(LoginProvider loginProvider, BuildContext context) {
+    final user = loginProvider.user;
+    final userName = user != null && user['name'] != null ? user['name'] : 'Guest';
+    final userLastName = user != null && user['lname'] != null ? user['lname'] : '';
+    final email = user != null && user['email'] != null ? user['email'] : 'Unknown';
+    return  Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: kWhite,
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(30),
+          topLeft: Radius.circular(30),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            height: 25,
+          ),
+
+          Text(
+            "$userName $userLastName ",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+          Text(
+            email,
+            style: kTextStyle.copyWith(fontSize: 14, color: kSubTitleColor),
+          ),
+          const SizedBox(
+            height: 20,
+          ),
+
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpdateForm(UpdateProfileProvider updateProfileProvider, BuildContext context){
+    return  Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10.0),
+      decoration:  const BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(30),
+          topLeft: Radius.circular(30),
+        ),
+
+        color: kWhite,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            height: 10,
+          ),
+          Text(
+            "Update Your Account",
+            style: kTextStyle.copyWith(
+              color: kTitleColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 18.0,
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                height: 25,
-              ),
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  Container(
-                    height: 90,
-                    width: 90,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                        image: image == null
-                            ? const DecorationImage(image: AssetImage('images/man.png'), fit: BoxFit.cover)
-                            : DecorationImage(image: FileImage(File(image!.path)), fit: BoxFit.cover)),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(5.0),
-                    decoration: BoxDecoration(
-                      color: kPrimaryColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: kWhite,
-                        width: 1.0,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_outlined,
-                      size: 17,
-                      color: kWhite,
-                    // ).onTap(() => getImage()),
-                    )
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              const Text(
-                'Sahidul Islam',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              Text(
-                'shaidulislamma@gmail.com',
-                style: kTextStyle.copyWith(fontSize: 14, color: kSubTitleColor),
-              ),
-              const SizedBox(
-                height: 25,
-              ),
-              Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(30),
-                    topLeft: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: kDarkWhite,
-                      offset: Offset(0, -2),
-                      blurRadius: 7.0,
-                      spreadRadius: 2.0,
-                    ), //BoxShadow//BoxShadow
-                  ],
-                  color: kWhite,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      AppTextField(
-                        cursorColor: kTitleColor,
-                        textFieldType: TextFieldType.NAME,
-                        decoration: kInputDecoration.copyWith(
-                          hintText: 'Sahidul Islam',
-                          labelText: 'Full Name',
-                        ),
-                      ),
-                      const SizedBox(height: 20.0),
-                      AppTextField(
-                        cursorColor: kTitleColor,
-                        textFieldType: TextFieldType.NAME,
-                        decoration: kInputDecoration.copyWith(
-                          hintText: 'shaidulislam@gmail.com',
-                          labelText: 'Email',
-                        ),
-                      ),
-                      const SizedBox(height: 20.0),
-                      AppTextField(
-                        cursorColor: kTitleColor,
-                        textFieldType: TextFieldType.NUMBER,
-                        decoration: kInputDecoration.copyWith(
-                          hintText: '017XXXXXXXX',
-                          prefixIcon: CountryCodePicker(
-                            showFlag: true,
-                            initialSelection: 'Bangladesh',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          const Divider().paddingOnly(right: 110, left: 110),
+
+          const SizedBox(height: 20.0),
+          _buildTextField("First Name", "First Name", TextInputType.name, updateProfileProvider.updateFirstNameController),
+          const SizedBox(height: 20.0),
+          _buildTextField("Last Name", "Last Name", TextInputType.name, updateProfileProvider.updateLastNameController),
+          const SizedBox(height: 20.0),
+          _buildTextField("Email", "Email", TextInputType.emailAddress, updateProfileProvider.updateEmailController),
+          const SizedBox(height: 20.0),
+          _buildPhoneField(updateProfileProvider),
+          const SizedBox(height: 20.0),
+          _buildGenderField(updateProfileProvider),
+          const SizedBox(height: 20.0),
+          _buildDateOfBirthField(updateProfileProvider, context),
+          const SizedBox(height: 20.0),
+          _buildTextField("Passport Number", "Passport Number", TextInputType.text, updateProfileProvider.updatePassportNumberController),
+          const SizedBox(height: 20.0),
+          _buildPassportExpiryField(updateProfileProvider, context),
+          const SizedBox(height: 20.0),
+          const SizedBox(height: 20.0),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(String labelText, String hintText, TextInputType keyboardType, TextEditingController controller){
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: TextInputAction.next,
+      decoration: kInputDecoration.copyWith(
+        labelText: labelText,
+        labelStyle: kTextStyle.copyWith(color: kTitleColor),
+        hintText: hintText,
+        hintStyle: kTextStyle.copyWith(color: kSubTitleColor),
+        focusColor: kTitleColor,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _buildPhoneField(UpdateProfileProvider provider) {
+    return TextFormField(
+      controller: provider.updatePhoneController,
+      keyboardType: TextInputType.phone,
+      cursorColor: kTitleColor,
+      textInputAction: TextInputAction.next,
+      decoration: kInputDecoration.copyWith(
+          hintText: 'Phone number',
+          hintStyle: kTextStyle.copyWith(color: kSubTitleColor),
+          focusColor: kTitleColor,
+          border: const OutlineInputBorder(),
+          prefixIcon: const CountryCodePicker(
+            padding: EdgeInsets.zero,
+            onChanged: print,
+            initialSelection: 'IN',
+            showFlag: true,
+            showDropDownButton: true,
+            alignLeft: false,
+          )
+      ),
+    );
+  }
+
+
+
+
+
+  Widget _buildPassportExpiryField(UpdateProfileProvider provider, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        provider.updateSelectExpiryDate(context);
+      },
+      child: AbsorbPointer(
+        child: TextFormField(
+          controller: TextEditingController(
+            text: provider.updateFormattedPassportExpiryDate,
+          ),
+          decoration: kInputDecoration.copyWith(
+              labelText: 'Passport Expiry Date',
+              hintText: 'Select Expiry Date',
+              border: const OutlineInputBorder(),
+              suffixIcon: const Icon(Icons.calendar_month_outlined)
           ),
         ),
       ),
     );
   }
+
+  Widget _buildGenderField(UpdateProfileProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Gender',
+          style: kTextStyle.copyWith(
+            color: kTitleColor,
+            fontSize: 16.0,
+          ),
+        ),
+        const SizedBox(height: 10,),
+        Row(
+          children:
+          provider.updateGenderOptions.entries.map((entry) {
+            return Row(
+              children: [
+                Radio<String>(
+                  value: entry.key,
+                  groupValue: provider.updateSelectedGender,
+                  onChanged: (value) {
+                    provider.setUpdateGender(value!);
+                  },
+                  activeColor: kPrimaryColor,
+                ),
+                Text(entry.value, style: kTextStyle.copyWith(color: kSubTitleColor)),
+              ],
+            );
+          }).toList(),
+
+        )
+
+      ],
+    );
+  }
+
+
+  Widget _buildDateOfBirthField(UpdateProfileProvider provider, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        provider.selectUpdateDateOfBirth(context); // Open calendar when tapped
+      },
+      child: AbsorbPointer(
+        child: TextFormField(
+          controller: TextEditingController(
+            text: provider.updateFormattedDateOfBirth,
+          ),
+          decoration: kInputDecoration.copyWith(
+            labelText: 'Date of Birth',
+            hintText: 'Select Date of Birth',
+            border: const OutlineInputBorder(),
+            suffixIcon: const Icon(Icons.calendar_today),
+          ),
+        ),
+      ),
+    );
+  }
+
+
 }

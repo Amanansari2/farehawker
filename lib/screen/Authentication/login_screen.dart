@@ -1,7 +1,10 @@
+import 'package:flightbooking/providers/login_provider.dart';
+import 'package:flightbooking/routes/route_generator.dart';
 import 'package:flightbooking/screen/Authentication/sign_up_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
 import 'package:nb_utils/nb_utils.dart';
+import 'package:provider/provider.dart';
 
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
@@ -17,17 +20,30 @@ class LogIn extends StatefulWidget {
 }
 
 class _LogInState extends State<LogIn> {
-  bool hidePassword = true;
-
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<LoginProvider>(context);
     return Scaffold(
       backgroundColor: kBlueColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: kBlueColor,
-        centerTitle: true,
-        title: Text(lang.S.of(context).loginButton , style: const TextStyle(color: kSecondaryColor),),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.home);
+              },
+              child: Text(
+                lang.S.of(context).skipButton,
+                style: kTextStyle.copyWith(color: kWhite, fontSize: 20),
+              ),
+            ),
+          )
+        ],
+        // centerTitle: true,
+        // title: Text(lang.S.of(context).loginButton , style: const TextStyle(color: kSecondaryColor),),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -77,6 +93,7 @@ class _LogInState extends State<LogIn> {
                     ),
                     const SizedBox(height: 40.0),
                     TextFormField(
+                      controller: provider.emailController,
                       keyboardType: TextInputType.emailAddress,
                       cursorColor: kTitleColor,
                       textInputAction: TextInputAction.next,
@@ -91,9 +108,10 @@ class _LogInState extends State<LogIn> {
                     ),
                     const SizedBox(height: 20.0),
                     TextFormField(
+                      controller: provider.passwordController,
                       cursorColor: kTitleColor,
                       keyboardType: TextInputType.emailAddress,
-                      obscureText: hidePassword,
+                      obscureText: provider.hidePassword,
                       textInputAction: TextInputAction.done,
                       decoration: kInputDecoration.copyWith(
                         border: const OutlineInputBorder(),
@@ -102,13 +120,11 @@ class _LogInState extends State<LogIn> {
                         hintText: lang.S.of(context).passwordHint,
                         hintStyle: kTextStyle.copyWith(color: kSubTitleColor),
                         suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              hidePassword = !hidePassword;
-                            });
-                          },
+                          onPressed: provider.togglePassword,
                           icon: Icon(
-                            hidePassword ? Icons.visibility_off : Icons.visibility,
+                            provider.hidePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: kSubTitleColor,
                           ),
                         ),
@@ -123,83 +139,92 @@ class _LogInState extends State<LogIn> {
                           child: Text(
                             lang.S.of(context).forgotPassword,
                             style: kTextStyle.copyWith(
-                              color: kPrimaryColor,
-                            ),
+                                color: kPrimaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20.0),
                     ButtonGlobalWithoutIcon(
-                      buttontext: lang.S.of(context).loginButton,
+                      buttontext: provider.isLoading
+                          ? "Logging in..."
+                          : lang.S.of(context).loginButton,
                       buttonDecoration: kButtonDecoration.copyWith(
                         color: kPrimaryColor,
                         borderRadius: BorderRadius.circular(30.0),
                       ),
-                      onPressed: () {
-                        const Home().launch(context);
-                      },
+                      onPressed: provider.isLoading
+                          ? null
+                          : () async {
+                              await provider.signIn(context);
+                              if (provider.loginData != null &&
+                                  provider.loginData!.status == "success") {
+                                toast("Login Successful");
+                                Navigator.pushNamed(context, AppRoutes.home);
+                              }
+                            },
                       buttonTextColor: kWhite,
                     ),
                     const SizedBox(height: 20.0),
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Divider(
-                            thickness: 1.0,
-                            color: kBorderColorTextField,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10.0, right: 10.0),
-                          child: Text(
-                            lang.S.of(context).orSignUpTitle,
-                            style: kTextStyle.copyWith(color: kSubTitleColor),
-                          ),
-                        ),
-                        const Expanded(
-                          child: Divider(
-                            thickness: 1.0,
-                            color: kBorderColorTextField,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20.0),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SocialIcon(
-                            bgColor: kWhite,
-                            icon: null,
-                            borderColor: Colors.transparent,
-                            child: Image.asset(
-                              'images/facebook.png',
-                              height: 40,
-                            ),
-                            onTap: (){
-                              print('facebook icon is tapped');
-                            },
-                          ),
-                          const SizedBox(width: 20.0),
-                          SocialIcon(
-                            bgColor: kWhite,
-                            icon: null,
-                            borderColor: Colors.transparent,
-                            child: Image.asset(
-                              'images/google.png',
-                              height: 40,
-                            ),
-                            onTap: (){
-                              print('Google icon tapped');
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-
+                    // Row(
+                    //   children: [
+                    //     const Expanded(
+                    //       child: Divider(
+                    //         thickness: 1.0,
+                    //         color: kBorderColorTextField,
+                    //       ),
+                    //     ),
+                    //     Padding(
+                    //       padding: const EdgeInsets.only(left: 10.0, right: 10.0),
+                    //       child: Text(
+                    //         lang.S.of(context).orSignUpTitle,
+                    //         style: kTextStyle.copyWith(color: kSubTitleColor),
+                    //       ),
+                    //     ),
+                    //     const Expanded(
+                    //       child: Divider(
+                    //         thickness: 1.0,
+                    //         color: kBorderColorTextField,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
+                    // const SizedBox(height: 20.0),
+                    // Padding(
+                    //   padding: const EdgeInsets.only(left: 20.0, right: 20.0),
+                    //   child: Row(
+                    //     mainAxisAlignment: MainAxisAlignment.center,
+                    //     children: [
+                    //       SocialIcon(
+                    //         bgColor: kWhite,
+                    //         icon: null,
+                    //         borderColor: Colors.transparent,
+                    //         child: Image.asset(
+                    //           'images/facebook.png',
+                    //           height: 40,
+                    //         ),
+                    //         onTap: (){
+                    //           print('facebook icon is tapped');
+                    //         },
+                    //       ),
+                    //       const SizedBox(width: 20.0),
+                    //       SocialIcon(
+                    //         bgColor: kWhite,
+                    //         icon: null,
+                    //         borderColor: Colors.transparent,
+                    //         child: Image.asset(
+                    //           'images/google.png',
+                    //           height: 40,
+                    //         ),
+                    //         onTap: (){
+                    //           print('Google icon tapped');
+                    //         },
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                   ],
                 ),
               )
@@ -221,7 +246,8 @@ class _LogInState extends State<LogIn> {
                   children: [
                     TextSpan(
                       text: lang.S.of(context).noAccTitle2,
-                      style: kTextStyle.copyWith(color: kPrimaryColor, fontWeight: FontWeight.bold),
+                      style: kTextStyle.copyWith(
+                          color: kPrimaryColor, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),

@@ -73,7 +73,7 @@ class S {
   /// `Welcome to Maan Flight`
   String get onBoardTitle1 {
     return Intl.message(
-      'Welcome to Maan Flight',
+      'Welcome to FareHawker',
       name: 'onBoardTitle1',
       desc: '',
       args: [],
@@ -92,7 +92,7 @@ class S {
   /// `Easily Find Any Place`
   String get onBoardTitle2 {
     return Intl.message(
-      'Easily Find Any Place',
+      'Easy Group & Charter Booking',
       name: 'onBoardTitle2',
       desc: '',
       args: [],
@@ -102,7 +102,7 @@ class S {
   /// `Get The Full Experience`
   String get onBoardTitle3 {
     return Intl.message(
-      'Get The Full Experience',
+      'Best Deals & Dedicated Support',
       name: 'onBoardTitle3',
       desc: '',
       args: [],
@@ -112,7 +112,7 @@ class S {
   /// `Pretium, ipsum pretium aliquet mollis cond imentum magna accumsan. Odio elit \ntellus id diam sit. Massa`
   String get onBoardSubTitle1 {
     return Intl.message(
-      'Pretium, ipsum pretium aliquet mollis cond imentum magna accumsan. Odio elit \ntellus id diam sit. Massa',
+      'Your one-stop partner for group flights. \nPlan trips for corporates, weddings, schools, \nor family vacations with ease.',
       name: 'onBoardSubTitle1',
       desc: '',
       args: [],
@@ -122,7 +122,7 @@ class S {
   /// `Pretium, ipsum pretium aliquet mollis cond imentum magna accumsan. Odio elit \ntellus id diam sit. Massa`
   String get onBoardSubTitle2 {
     return Intl.message(
-      'Pretium, ipsum pretium aliquet mollis cond imentum magna accumsan. Odio elit \ntellus id diam sit. Massa',
+      'Book for 10+ passengers hassle-free. \nBlock seats, and confirm names later—bulk travel made simple.',
       name: 'onBoardSubTitle2',
       desc: '',
       args: [],
@@ -132,7 +132,7 @@ class S {
   /// `Pretium, ipsum pretium aliquet mollis cond imentum magna accumsan. Odio elit \ntellus id diam sit. Massa`
   String get onBoardSubTitle3 {
     return Intl.message(
-      'Pretium, ipsum pretium aliquet mollis cond imentum magna accumsan. Odio elit \ntellus id diam sit. Massa',
+      'Grab exclusive deals and 24/7 support. \nGet real-time alerts, flexible payments, and a smooth travel experience.',
       name: 'onBoardSubTitle3',
       desc: '',
       args: [],
@@ -432,7 +432,7 @@ class S {
   /// `Please enter your phone number below to receive your OTP number.`
   String get fpDesc1 {
     return Intl.message(
-      'Please enter your phone number below to receive your OTP number.',
+      'Please provide your email address below, and we will send you a link to reset your password.',
       name: 'fpDesc1',
       desc: '',
       args: [],

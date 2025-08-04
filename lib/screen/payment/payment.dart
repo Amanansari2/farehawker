@@ -15,6 +15,9 @@ import '../../providers/country_provider.dart';
 import '../../providers/search_flight_provider.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
+import '../../widgets/custom_dialog.dart';
+import '../home/home.dart';
+import '../ticket status/ticket_status.dart';
 
 class Payment extends StatefulWidget {
   final FlightDetail onwardFlight;
@@ -105,12 +108,42 @@ class _PaymentState extends State<Payment> {
                     color: kPrimaryColor,
                     borderRadius: BorderRadius.circular(30.0),
                   ),
-                  onPressed: () {
+
+                  onPressed: () async {
                     final traceId = widget.onwardFlight.traceID;
                     final amount = getTotalFare().toStringAsFixed(2);
-                     PaymentMethod(amount: amount,orderId: traceId,).launch(context);
 
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentMethod(
+                          amount: amount,
+                          orderId: traceId,
+                        ),
+                      ),
+                    );
+
+                    if (result != null && result is Map) {
+                      final status = result['status'];
+
+                      if (status == 'success') {
+                        showSuccessPopup(context);
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (_) => CustomDialogBox(
+                            title: 'Payment Failed',
+                            descriptions: "",
+                            text: 'Ok',
+                            img: 'images/dialog_error.png',
+                            titleColor: kRedColor,
+                            functionCall: () => Navigator.of(context).pop(),
+                          ),
+                        );
+                      }
+                    }
                   },
+
                   buttonTextColor: kWhite,
                 ),
               ),
@@ -401,4 +434,84 @@ class _PaymentState extends State<Payment> {
       ),
     );
   }
+
+
+
+
+  void showSuccessPopup(BuildContext contex) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  height: 118.0,
+                  width: 133.0,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('images/success.png'),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                Text(
+                  'Payment Succeed!',
+                  style: kTextStyle.copyWith(
+                    color: kTitleColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 21,
+                  ),
+                ),
+                Text(
+                  'Thank you for purchasing the ticket!',
+                  textAlign: TextAlign.center,
+                  style: kTextStyle.copyWith(color: kSubTitleColor),
+                ),
+                const SizedBox(height: 10.0),
+                ButtonGlobalWithoutIcon(
+                  buttontext: 'View Ticket',
+                  buttonDecoration: kButtonDecoration.copyWith(color: kPrimaryColor),
+                  onPressed: () {
+                    finish(context);
+                    const TicketStatus().launch(context);
+                  },
+                  buttonTextColor: kWhite,
+                ),
+                const SizedBox(height: 20.0),
+                GestureDetector(
+                  onTap: () {
+                    finish(context);
+                    const Home().launch(context);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        FeatherIcons.arrowLeft,
+                        color: kSubTitleColor,
+                      ),
+                      Text(
+                        'Back to Home',
+                        style: kTextStyle.copyWith(color: kSubTitleColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 }

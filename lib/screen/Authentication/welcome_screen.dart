@@ -1,3 +1,4 @@
+import 'package:flightbooking/routes/route_generator.dart';
 import 'package:flightbooking/screen/Authentication/sign_up_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -32,11 +33,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     padding: const EdgeInsets.all(15.0),
                     child: GestureDetector(
                       onTap: () {
-                        const Home().launch(context);
+                        Navigator.pushNamed(context, AppRoutes.home);
                       },
                       child: Text(
                         lang.S.of(context).skipButton,
-                        style: kTextStyle.copyWith(color: kTitleColor),
+                        style: kTextStyle.copyWith(color: kPrimaryColor, fontSize: 22, ),
                       ),
                     ),
                   ),

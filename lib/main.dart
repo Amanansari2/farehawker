@@ -4,7 +4,6 @@ import 'package:flightbooking/screen/provider/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_storage/get_storage.dart';
-// import 'package:nb_utils/nb_utils.dart';
 import 'package:nb_utils/nb_utils.dart' hide S;
 import 'package:provider/provider.dart';
 import 'generated/l10n.dart';

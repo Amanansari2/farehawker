@@ -1,18 +1,14 @@
 import 'dart:convert';
-import 'package:flightbooking/api_services/configs/urls.dart';
+import 'package:dio/dio.dart';
+import 'package:flightbooking/api_services/app_logger.dart';
+import 'package:flightbooking/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
-import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../../api_services/api_request/post_request.dart';
 import '../../../api_services/configs/app_configs.dart';
-import '../../../widgets/button_global.dart';
 import '../../../widgets/constant.dart';
-import '../../home/home.dart';
-import '../../ticket status/ticket_status.dart';
 
 class PaymentMethod extends StatefulWidget {
   final String orderId;
@@ -29,71 +25,133 @@ class PaymentMethod extends StatefulWidget {
 }
 
 class _PaymentMethodState extends State<PaymentMethod> {
-  final PostService _postService = PostService();
-  final WebViewController _controller = WebViewController();
+  late WebViewController _controller;
   bool isLoading = true;
   String? paymentUrl;
 
-  @override
+
+   @override
   void initState() {
     super.initState();
+
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (url) {
+            AppLogger.log("Page started loading: $url");
+          },
+          onWebResourceError: (error) {
+            AppLogger.log("Error loading web resource: ${error.description}");
+            setState(() {
+              isLoading = false;
+            });
+             toast("Failed to load payment page.");
+          },
+          onPageFinished: (url) {
+            AppLogger.log("Finished loading: $url");
+
+            if (url.contains("paymentResponse.php")) {
+              _controller.runJavaScriptReturningResult("document.body.innerText").then((result) {
+                final raw = result?.toString().trim() ?? '';
+                AppLogger.log("Raw JS result: $raw");
+
+                dynamic decoded;
+                try {
+                  final unescaped = jsonDecode(raw);
+                  decoded = jsonDecode(unescaped);
+                } catch (e) {
+                  AppLogger.log("Double jsonDecode failed: $e");
+                  Future.microtask(() {
+                    showDialog(
+                      context: context,
+                      builder: (_) => CustomDialogBox(
+                        title: 'Payment Failed',
+                        descriptions: "Something went Wrong while processing Payment",
+                        text: 'Ok',
+                        img: 'images/dialog_error.png',
+                        titleColor: kRedColor,
+                        functionCall: () => Navigator.of(context).pop(),
+                      ),
+                    );
+                  });
+                  return;
+                }
+                AppLogger.log("Decoded JSON: $decoded");
+
+                final message = decoded['message'];
+                final paymentStatus = message?['payment_status'] ?? 'Unknown';
+
+                if (paymentStatus == 'Success') {
+                  Navigator.of(context).pop({'status': 'success',});
+                } else {
+                  Navigator.of(context).pop({'status': 'failure', 'message': decoded});
+                }
+
+
+              });
+            }
+
+            setState(() {
+              isLoading = false;
+            });
+          },
+        ),
+      );
+
     _generatePaymentUrl();
   }
 
+
+
+
+
   Future<void> _generatePaymentUrl() async {
-
     try {
+      Dio dio = Dio();
 
-      final response = await _postService.postRequest(
-          endPoint: flightSearch,
-          body: {
-            "order_id":widget.orderId,
-            "amount" : widget.amount
+      final formData = FormData.fromMap({
+        'trace_id': widget.orderId,
+         'total_fare': widget.amount,
+        // 'total_fare': "1",
+      });
+
+      final response = await dio.post(
+        'https://farehawker.com/ff/phone_api/paymentRequest.php',
+        data: formData,
+        options: Options(
+          headers: {
+            'action': 'Payment',
+            'api-key': AppConfigs.apiKey,
           },
-      requireAuth: false,
-        customHeaders: {
-          'action': 'countries',
-          'api-key' :  AppConfigs.apiKey
-        }
+        ),
       );
 
-      if (response["status"] == 200) {
-        final data = response;
-        paymentUrl = data["payment_url"];
+      final data = response.data;
+
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        paymentUrl = data['paymentURL']?.replaceAll(r'\/', '/');
+        AppLogger.log("Final Payment URL: $paymentUrl");
+
+        setState(() => isLoading = false);
 
         if (paymentUrl != null) {
-          _controller
-            ..setJavaScriptMode(JavaScriptMode.unrestricted)
-            ..setNavigationDelegate(
-              NavigationDelegate(
-                onNavigationRequest: (navReq) {
-                  if (navReq.url.contains("payment-success")) {
-                    Future.microtask(() => showSuccessPopup());
-                    return NavigationDecision.prevent;
-                  } else if (navReq.url.contains("payment-failure")) {
-                    Future.microtask(() {
-                      toast('Payment failed, please try again.');
-                      Navigator.pop(context);
-                    });
-                    return NavigationDecision.prevent;
-                  }
-                  return NavigationDecision.navigate;
-                },
-              ),
-            )
-            ..loadRequest(Uri.parse(paymentUrl!));
+          _controller.loadRequest(Uri.parse(paymentUrl!));
+        } else {
+          toast("Payment URL missing in response");
         }
-
-        setState(() => isLoading = false);
       } else {
         setState(() => isLoading = false);
-        toast("Failed to initialize payment");
+        toast("Payment failed: ${data['status']}");
       }
     } catch (e) {
       setState(() => isLoading = false);
+      AppLogger.log("Error: $e");
       toast("Something went wrong");
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -110,84 +168,10 @@ class _PaymentMethodState extends State<PaymentMethod> {
           ? const Center(child: CircularProgressIndicator())
           : paymentUrl == null
           ? const Center(child: Text("Unable to load payment page"))
-          : WebViewWidget(controller: _controller),
+          : WebViewWidget(controller: _controller), // WebView
     );
   }
 
-  void showSuccessPopup() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  height: 118.0,
-                  width: 133.0,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('images/success.png'),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20.0),
-                Text(
-                  'Payment Succeed!',
-                  style: kTextStyle.copyWith(
-                    color: kTitleColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 21,
-                  ),
-                ),
-                Text(
-                  'Thank you for purchasing the ticket!',
-                  textAlign: TextAlign.center,
-                  style: kTextStyle.copyWith(color: kSubTitleColor),
-                ),
-                const SizedBox(height: 10.0),
-                ButtonGlobalWithoutIcon(
-                  buttontext: 'View Ticket',
-                  buttonDecoration:
-                  kButtonDecoration.copyWith(color: kPrimaryColor),
-                  onPressed: () {
-                    finish(context);
-                    const TicketStatus().launch(context);
-                  },
-                  buttonTextColor: kWhite,
-                ),
-                const SizedBox(height: 20.0),
-                GestureDetector(
-                  onTap: () {
-                    finish(context);
-                    const Home().launch(context);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        FeatherIcons.arrowLeft,
-                        color: kSubTitleColor,
-                      ),
-                      Text(
-                        'Back to Home',
-                        style: kTextStyle.copyWith(color: kSubTitleColor),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  // Payment success popup
+
 }

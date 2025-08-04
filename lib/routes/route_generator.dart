@@ -1,10 +1,18 @@
 import 'package:flightbooking/api_services/app_logger.dart';
+import 'package:flightbooking/screen/Authentication/forgot_password.dart';
+import 'package:flightbooking/screen/Authentication/login_screen.dart';
 import 'package:flightbooking/screen/Authentication/splash%20screen/onboard.dart';
 import 'package:flightbooking/screen/Authentication/splash%20screen/splash_screen.dart';
 import 'package:flightbooking/screen/Authentication/welcome_screen.dart';
 import 'package:flightbooking/screen/book%20proceed/book_proceed.dart';
 import 'package:flightbooking/screen/book%20proceed/round_trip_book_proceed.dart';
-import 'package:flightbooking/screen/profile/setting/notification.dart';
+import 'package:flightbooking/screen/home/home_screen.dart';
+import 'package:flightbooking/screen/notifications/notification.dart';
+import 'package:flightbooking/screen/profile/my_profile/my_profile.dart';
+import 'package:flightbooking/screen/profile/privacy_policy/privacy_policy.dart';
+import 'package:flightbooking/screen/profile/refund_policy/refund_policy.dart';
+import 'package:flightbooking/screen/profile/reset_password/reset_password.dart';
+import 'package:flightbooking/screen/profile/terms_condition/terms_condition.dart';
 import 'package:flightbooking/screen/search/filter.dart';
 import 'package:flightbooking/screen/search/flight_details.dart';
 import 'package:flightbooking/screen/search/round_trip_flight_details.dart';
@@ -14,6 +22,7 @@ import 'package:flightbooking/widgets/constant.dart';
 import 'package:flutter/material.dart';
 
 import '../models/flight_details_model.dart';
+import '../screen/home/home.dart';
 import '../screen/profile/profile_screen.dart';
 import '../screen/search/round_trip_search_result.dart';
 
@@ -23,7 +32,15 @@ class AppRoutes {
   static const String splash = "/";
   static const String onBoard = "/OnBoard";
   static const String welcome = "/WelcomeScreen";
+  static const String login = "/LogInScreen";
+  static const String home = "/HomeScreen";
   static const String profile = "/Profile";
+  static const String myProfile = "/MyProfile";
+  static const String resetPassword = "/ResetPassword";
+  static const String forgotPassword = "/ForgotPassword";
+  static const String termsCondition = "/TermsConditions";
+  static const String privacyPolicy = "/PrivacyPolicy";
+  static const String refundPolicy = "/RefundPolicy";
   static const String notification = "/NotificationSc";
   static const String search = "/Search";
   static const String searchResult = "/SearchResult";
@@ -49,8 +66,32 @@ class RouteGenerator {
       case AppRoutes.welcome:
         return MaterialPageRoute(builder: (_) => const WelcomeScreen());
 
+      case AppRoutes.login:
+        return MaterialPageRoute(builder: (_) => const LogIn());
+
+      case AppRoutes.forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPassword());
+
+      case AppRoutes.home:
+        return MaterialPageRoute(builder: (_) =>  const Home());
+
       case AppRoutes.profile:
         return MaterialPageRoute(builder: (_) => const Profile());
+
+      case AppRoutes.resetPassword:
+        return MaterialPageRoute(builder: (_) => const ResetPassword());
+
+      case AppRoutes.myProfile:
+        return MaterialPageRoute(builder: (_) => const MyProfile());
+
+      case AppRoutes.termsCondition:
+        return MaterialPageRoute(builder: (_) => const TermsConditions());
+
+      case AppRoutes.privacyPolicy:
+        return MaterialPageRoute(builder: (_) => const PrivacyPolicy());
+
+      case AppRoutes.refundPolicy:
+        return MaterialPageRoute(builder: (_) => const RefundPolicy());
 
       case AppRoutes.notification:
         return MaterialPageRoute(builder: (_) => const NotificationSc());
@@ -66,6 +107,7 @@ class RouteGenerator {
 
       case AppRoutes.filter:
         return MaterialPageRoute(builder: (_) => const Filter());
+
 
       case AppRoutes.flightDetails:
         final args = settings.arguments;

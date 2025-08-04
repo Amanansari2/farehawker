@@ -26,13 +26,13 @@ class _OnBoardState extends State<OnBoard> {
 
   List<Map<String, dynamic>> sliderList = [
     {
-      "icon": 'images/onboard1.png',
+      "icon": 'images/logo/onboard_f3.png',
     },
     {
-      "icon": 'images/onboard2.png',
+      "icon": 'images/logo/onboard_f2.png',
     },
     {
-      "icon": 'images/onboard3.png',
+      "icon": 'images/logo/onboard_f1.png',
     },
   ];
 
@@ -45,7 +45,7 @@ class _OnBoardState extends State<OnBoard> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: const Color(0xFFF9F9F9),
+        backgroundColor: kWhite,
         body: PageView.builder(
           itemCount: sliderList.length,
           // physics: const NeverScrollableScrollPhysics(),
@@ -91,7 +91,7 @@ class _OnBoardState extends State<OnBoard> {
 
                       child: Text(
                         lang.S.of(context).skipButton,
-                        style: kTextStyle.copyWith(color: kSubTitleColor),
+                        style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -147,22 +147,24 @@ class _OnBoardState extends State<OnBoard> {
                           const SizedBox(height: 25.0),
                           Text(
                             currentIndexPage == 0
-                                ? lang.S.of(context).onBoardTitle1
+                                ?  'Welcome to FareHawker'
                                 : currentIndexPage == 1
-                                    ? lang.S.of(context).onBoardTitle2
-                                    : lang.S.of(context).onBoardTitle3,
+                                    ? 'Easy Group & Charter Booking '
+                                    : 'Best Deals & Dedicated Support',
                             textAlign: TextAlign.center,
-                            style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 18.0),
+                            style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 24),
                           ),
                           const SizedBox(height: 20.0),
                           Text(
                             currentIndexPage == 0
-                                ? lang.S.of(context).onBoardSubTitle1
-                                : currentIndexPage == 1
-                                    ? lang.S.of(context).onBoardSubTitle2
-                                    : lang.S.of(context).onBoardSubTitle3,
+                                ?'Your one-stop partner for group flights. \nPlan trips for corporates, weddings, schools, or family vacations with ease.'
+                              : currentIndexPage == 1
+                              ?'Book for 10+ passengers hassle-free. \nBlock seats, and confirm names later—bulk travel made simple.'
+                              :'Grab exclusive deals and 24/7 support. \nGet real-time alerts, flexible payments, and a smooth travel experience.',
                             style: kTextStyle.copyWith(
                               color: kSubTitleColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16
                             ),
                             maxLines: 3,
                             textAlign: TextAlign.center,

@@ -1,61 +1,159 @@
-// import 'dart:convert';
-//
-// import 'package:dio/dio.dart';
-// import 'package:flightbooking/api_services/app_logger.dart';
-// import 'package:get_storage/get_storage.dart';
-//
-// import '../api_services/configs/urls.dart';
-//
-// class AuthRepository{
-//   final Dio _dio = Dio();
-//   final box = GetStorage('authBox');
-//
-//   Future<bool> loginIfNeeded() async {
-//     final token = box.read('auth_token');
-//     final timestamp = box.read('auth_token_timestamp');
-//
-//     AppLogger.log("Stored token: $token");
-//     AppLogger.log("Stored timestamp: $timestamp");
-//
-//     if(token != null && timestamp != null){
-//       final saved = DateTime.parse(timestamp);
-//       final hoursDiff = DateTime.now().difference(saved).inHours;
-//       AppLogger.log("Token age: $hoursDiff hours");
-//       if(hoursDiff < 24) {
-//         AppLogger.log("✅ Token still valid, skipping login.");
-//         return true;
-//       }
-//     }
-//
-//     AppLogger.log("Token missing or expired. Proceeding to login...");
-//     return await _login();
-//   }
-//
-//   Future<bool> _login() async {
-//     try{
-//       const agentId = 'AQAG011766';
-//       const username = '9311663434';
-//       const password = '9311663434';
-//       final credentials = "$agentId*$username:$password";
-//       final auth = base64Encode(utf8.encode(credentials));
-//       final authHeader = 'Basic $auth';
-//
-//       final response = await _dio.post(
-//           authUrl,
-//         options: Options(headers: {'Authorization' : authHeader}),
-//       );
-//
-//       AppLogger.log("Initial Response  --->>>> $response");
-//
-//       final token = response.data['token'];
-//       if (token != null) {
-//         box.write('auth_token', token);
-//         box.write('auth_token_timestamp', DateTime.now().toIso8601String());
-//         return true;
-//       }
-//     } catch (e) {
-//       AppLogger.log("Login error: $e");
-//     }
-//     return false;
-//   }
-//     }
+
+import 'package:flightbooking/api_services/app_logger.dart';
+import 'package:flightbooking/api_services/configs/app_configs.dart';
+import 'package:flightbooking/api_services/configs/urls.dart';
+import 'package:flightbooking/generated/l10n.dart';
+import 'package:get_storage/get_storage.dart';
+
+import '../api_services/api_request/post_request.dart';
+import '../models/login_model.dart';
+import '../models/profile_model.dart';
+import '../models/sign_up_model.dart';
+
+class AuthRepository {
+  final PostService _postService = PostService();
+  final box = GetStorage();
+
+  Future<Map<String, dynamic>> signUp(SignUpModel signUpData) async {
+    try {
+      final response = await _postService.postRequest(
+        endPoint: register,
+        body: signUpData.toJson(),
+        requireAuth: false,
+        customHeaders: {
+          "action" : "Register",
+          "api-key" : AppConfigs.apiKey
+        }
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Error during sign-up: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateProfile(SignUpModel updateData) async{
+    try{
+      final response = await _postService.postRequest(
+          endPoint: updateProfileUrl,
+          body: updateData.toJson(),
+          requireAuth: true,
+        customHeaders: {
+            "action" : "ProfileUpdate",
+          "api-key" : AppConfigs.apiKey
+        }
+      );
+      return response;
+    } catch(e) {
+      throw Exception("'Error during sign-up: $e");
+    }
+  }
+
+  Future<LoginModel> signIn(String email, String password) async {
+    try {
+      final response = await _postService.postRequest(
+        endPoint: login,
+        body: {
+          'email': email,
+          'password': password,
+        },
+        requireAuth: false,
+        customHeaders: {
+          "action": "Login",
+          "api-key": AppConfigs.apiKey,
+        },
+      );
+
+      if (response['status'] == 'success') {
+
+        return LoginModel.fromJson(response);
+      } else {
+        final dynamic message = response['message'] ?? 'Login failed';
+        throw Exception(message is List ? message.join(", ") : message.toString());
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceFirst("Exception: ", ""));
+    }
+  }
+
+
+
+  Future<ProfileModel> getProfile(int id) async {
+    try {
+
+      final response = await _postService.postRequest(
+        endPoint: getUserProfile,
+        requireAuth: true,
+        customHeaders: {
+          "action": "Profile",
+          "api-key": AppConfigs.apiKey,
+        },
+        body: {"id": id},
+      );
+
+      if (response['status'] == 'success') {
+        return ProfileModel.fromJson(response['data']);
+      } else {
+        final message = response['message']?.toString() ?? 'Failed to fetch profile';
+        throw Exception(message);
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceFirst("Exception: ", ""));
+    }
+  }
+
+  Future<Map<String, dynamic>> logout(Map<String, String> headers) async{
+    try{
+      final response = await _postService.postRequest(
+          endPoint: updateProfileUrl,
+          body: {},
+          requireAuth: true,
+          customHeaders: headers,
+      );
+      return response;
+    } catch(e) {
+      throw Exception("'Error during sign-up: $e");
+    }
+  }
+
+
+  Future<Map<String, dynamic>> resetPassword(String currentPassword, String newPassword, String confirmPassword) async{
+    try{
+      final response = await _postService.postRequest(
+          endPoint: changePassword,
+          body: {
+            "CurrentPassword" : currentPassword,
+            "NewPassword" : newPassword,
+            "ConfirmPassword" : confirmPassword
+          },
+      requireAuth: true,
+        customHeaders: {
+          "action": "ChangePassword",
+          "api-key": AppConfigs.apiKey,
+        }
+      );
+      return response;
+    } catch (e) {
+      throw Exception("Error during resetPassword $e");
+    }
+  }
+
+
+  Future<Map<String, dynamic>> forgetPassword(String email) async {
+    try{
+      final response = await _postService.postRequest(
+          endPoint: forgotPasswordUrl,
+          body: {
+            'email' : email
+          },
+      requireAuth: false,
+        customHeaders: {
+          "action": "forgotPassword",
+          "api-key": AppConfigs.apiKey,
+        }
+      );
+      return response;
+    } catch(e){
+      throw Exception("Error sending password reset link $e");
+    }
+  }
+}

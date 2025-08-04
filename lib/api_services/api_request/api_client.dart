@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/foundation.dart';
 
@@ -20,6 +23,13 @@ class DioApiClient {
     },
   )) {
     if (kDebugMode) {
+      (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+          (HttpClient client) {
+        client.badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+        return client;
+      };
+
       _dio.interceptors.add(LogInterceptor(
         request: true,
         responseBody: true,

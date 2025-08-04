@@ -1,6 +1,9 @@
 import 'package:flightbooking/api_services/internet_status.dart';
 import 'package:flightbooking/providers/fare_rule_provider.dart';
 import 'package:flightbooking/providers/filter_provider.dart';
+import 'package:flightbooking/providers/login_provider.dart';
+import 'package:flightbooking/providers/logout_provider.dart';
+import 'package:flightbooking/providers/update_profile_provider.dart';
 import 'package:flightbooking/repository/fare_rule_repo.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -45,6 +48,11 @@ final List<SingleChildWidget> appProviders = [
       return CountryProvider(repo);
     },
   ),
+
+  ChangeNotifierProvider<LoginProvider>(create: (_) => LoginProvider()),
+
+  ChangeNotifierProvider<UpdateProfileProvider>(create: (_) => UpdateProfileProvider()),
+  ChangeNotifierProvider<LogoutProvider>(create: (_) => LogoutProvider()),
 
 
   ChangeNotifierProvider<SearchFlightProvider>(
