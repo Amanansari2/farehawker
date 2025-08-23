@@ -1,6 +1,8 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flightbooking/api_services/app_logger.dart';
 import 'package:flightbooking/generated/l10n.dart' as lang;
+import 'package:flightbooking/providers/pricing_request%20_provider.dart';
+import 'package:flightbooking/routes/route_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -53,14 +55,9 @@ class _BookProceedState extends State<RoundTripBookProceed> {
                 onEdit: () => _roundTripShowBookingModal(context),
               ),
               const SizedBox(height: 10),
-              RoundTripTravellerDetailsCard(
-                onAddTraveller: () => _roundTripShowAddTravellerModal(context),
+              RoundTripTravellerDetailsCard(flight: widget.onwardFlight,
               ),
-              if (widget.onwardFlight.passport == true ||
-                  widget.returnFlight.passport == true)
-              RoundTripPassportDetailsCard(
-                onAddPassport:() => _roundTripShowAddPassportModal(context),
-              )
+
             ],
           ),
         ),
@@ -68,77 +65,7 @@ class _BookProceedState extends State<RoundTripBookProceed> {
     );
   }
 
-  void _roundTripShowAddTravellerModal(BuildContext context) {
-    final searchProvider = context.read<SearchFlightProvider>();
-    final bookProvider = context.read<BookProceedProvider>();
 
-    final maxTravellers = searchProvider.adultCount +
-        searchProvider.childCount +
-        searchProvider.infantCount;
-    if (bookProvider.travellers.length >= maxTravellers) {
-      showDialog(
-        context: context,
-        builder: (ctx) {
-          return CustomDialogBox(
-            title: "Limit Reached",
-            descriptions: "You can add up to $maxTravellers travellers only.",
-            text: "OK",
-            img: 'images/dialog_error.png',
-            titleColor: Colors.red,
-            functionCall: () {
-              Navigator.of(ctx).pop(); // dismiss dialog
-            },
-          );
-        },
-      );
-      return;
-    }
-    bookProvider.resetForm();
-    showModalBottomSheet(
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
-        ),
-        context: context,
-        builder: (_) => const RoundTripAddTravellerModal());
-  }
-
-  void _roundTripShowAddPassportModal(BuildContext context) {
-    final searchProvider = context.read<SearchFlightProvider>();
-    final bookProvider = context.read<BookProceedProvider>();
-
-    final maxPassports = searchProvider.adultCount +
-        searchProvider.childCount +
-        searchProvider.infantCount;
-    if (bookProvider.passports.length >= maxPassports) {
-      showDialog(
-        context: context,
-        builder: (ctx) {
-          return CustomDialogBox(
-            title: "Limit Reached",
-            descriptions: "You can add up to $maxPassports passport only.",
-            text: "OK",
-            img: 'images/dialog_error.png',
-            titleColor: Colors.red,
-            functionCall: () {
-              Navigator.of(ctx).pop(); // dismiss dialog
-            },
-          );
-        },
-      );
-      return;
-    }
-    bookProvider.resetPassportForm();
-    showModalBottomSheet(
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
-        ),
-        context: context,
-        builder: (_) => const RoundTripAddPassportModal());
-  }
 
   void _roundTripShowBookingModal(BuildContext context) {
     showModalBottomSheet(
@@ -220,37 +147,46 @@ class RoundTripBookProceedBottomBar extends StatelessWidget {
 
           SizedBox(
             width: 200,
-            child: ButtonGlobalWithoutIcon(
-              buttontext: lang.S.of(context).continueButton,
-              buttonDecoration: kButtonDecoration.copyWith(
-                color: kPrimaryColor,
-                borderRadius: BorderRadius.circular(30.0),
-              ),
-              onPressed: ()  async{
-                final bookProvider = context.read<BookProceedProvider>();
-                final searchProvider = context.read<SearchFlightProvider>();
-                try {
-                  final response = await bookProvider.submitRoundTripBookingData(
-                      context: context,
-                      onwardFlight: onwardFlight,
-                      returnFlight: returnFlight,
-                      searchProvider: searchProvider);
+            child: Consumer<PricingProvider>(
+              builder: (context, pricingProvider, _) {
+                final isLoading = pricingProvider.isLoading || pricingProvider.isOnwardLoading || pricingProvider.isReturnLoading;
+                return ButtonGlobalWithoutIcon(
+                  buttontext: isLoading ? "Please wait..." :lang.S.of(context).continueButton,
+                  buttonDecoration: kButtonDecoration.copyWith(
+                    color: kPrimaryColor,
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  onPressed: isLoading
+                        ? null
+                        :()  async{
+                    final bookProvider = context.read<BookProceedProvider>();
+                    final searchProvider = context.read<SearchFlightProvider>();
+                    try {
+                      final response = await bookProvider.submitRoundTripBookingData(
+                          context: context,
+                          onwardFlight: onwardFlight,
+                          returnFlight: returnFlight,
+                          searchProvider: searchProvider);
 
-                  AppLogger.log("data Submit -->> $response");
+                      AppLogger.log("data Submit -->> $response");
+                      pricingProvider.clearSelectedServices(bookProvider.travellers);
 
-                  if(context.mounted){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>  Payment(onwardFlight: onwardFlight, returnFlight:returnFlight ,),
-                      ),
-                    );
-                  }
-                }catch(e){
-                  AppLogger.log("Data Submit failed -->> $e");
-                }
-              },
-              buttonTextColor: kWhite,
+                      await pricingProvider.fetchRoundTripPricing(onwardFlight, returnFlight, searchProvider.adultCount, searchProvider.childCount, searchProvider.infantCount);
+
+                      if(context.mounted){
+                        Navigator.pushNamed(context, AppRoutes.roundTripPricingRules, arguments: {
+                          'onwardFlight' : onwardFlight,
+                          'returnFlight' : returnFlight
+                        });
+                        // Navigator.pushNamed(context, AppRoutes.payment, arguments:  {'onwardFlight' : onwardFlight, 'returnFlight' : returnFlight});
+                      }
+                    }catch(e){
+                      AppLogger.log("Data Submit failed -->> $e");
+                    }
+                  },
+                  buttonTextColor: kWhite,
+                );
+              }
             ),
           ),
 
@@ -540,33 +476,35 @@ class RoundTripSingleBaggageModal extends StatelessWidget {
                         ),
                       );
                     }
-                    return Html(
-                      data: fareProvider.formatFareRulesHtml(rules),
-                      style: {
-                        "body": Style(
-                          fontSize: FontSize(16.0),
-                          lineHeight: LineHeight.number(1.2),
-                          color: Colors.black87,
-                        ),
-                        "b": Style(fontWeight: FontWeight.bold),
-                        "table": Style(
-                          backgroundColor: Colors.grey.shade50,
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        "th": Style(
-                          padding: HtmlPaddings.all(6),
-                          fontWeight: FontWeight.bold,
-                          backgroundColor: Colors.grey.shade200,
-                        ),
-                        "td": Style(
-                          padding: HtmlPaddings.all(6),
-                        ),
-                        "li": Style(
-                          padding: HtmlPaddings.symmetric(vertical: 4),
-                        ),
-                        "ul": Style(padding: HtmlPaddings.only(left: 16)),
-                      },
-                    );
+                    return Text("No fare rules found",
+                        style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 20));
+                    // return Html(
+                    //   data: fareProvider.formatFareRulesHtml(rules),
+                    //   style: {
+                    //     "body": Style(
+                    //       fontSize: FontSize(16.0),
+                    //       lineHeight: LineHeight.number(1.2),
+                    //       color: Colors.black87,
+                    //     ),
+                    //     "b": Style(fontWeight: FontWeight.bold),
+                    //     "table": Style(
+                    //       backgroundColor: Colors.grey.shade50,
+                    //       border: Border.all(color: Colors.grey.shade300),
+                    //     ),
+                    //     "th": Style(
+                    //       padding: HtmlPaddings.all(6),
+                    //       fontWeight: FontWeight.bold,
+                    //       backgroundColor: Colors.grey.shade200,
+                    //     ),
+                    //     "td": Style(
+                    //       padding: HtmlPaddings.all(6),
+                    //     ),
+                    //     "li": Style(
+                    //       padding: HtmlPaddings.symmetric(vertical: 4),
+                    //     ),
+                    //     "ul": Style(padding: HtmlPaddings.only(left: 16)),
+                    //   },
+                    // );
                   },
                 )
               ],
@@ -581,101 +519,181 @@ class RoundTripSingleBaggageModal extends StatelessWidget {
 
 // ============================= TRAVELLER DETAILS =============================
 class RoundTripTravellerDetailsCard extends StatelessWidget {
-  final VoidCallback onAddTraveller;
+  final FlightDetail flight;
+  const RoundTripTravellerDetailsCard({Key? key, required this.flight}) : super(key: key);
 
-  const RoundTripTravellerDetailsCard({Key? key, required this.onAddTraveller})
-      : super(key: key);
+  void _showAddTravellerModal(BuildContext context, String type, int typeLimit) {
+    final bookProvider = context.read<BookProceedProvider>();
+    final currentTypeCount = bookProvider.travellers.where((t) => t.type == type).length;
+    if (currentTypeCount >= typeLimit) {
+      showDialog(
+        context: context,
+        builder: (ctx) {
+          return CustomDialogBox(
+            title: "Limit Reached",
+            descriptions: "You can add up to $typeLimit $type(s) only.",
+            text: "OK",
+            img: 'images/dialog_error.png',
+            titleColor: Colors.red,
+            functionCall: () {
+              Navigator.of(ctx).pop();
+            },
+          );
+        },
+      );
+      return;
+    }
+    bookProvider.resetForm();
+    showModalBottomSheet(
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
+        ),
+        context: context,
+        builder: (_) => AddTravellerModal(type: type, typeLimit: typeLimit, flight: flight,)
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final searchProvider = context.read<SearchFlightProvider>();
     final bookProvider = context.watch<BookProceedProvider>();
+
+    final Map<String, int> typeLimits = {
+      'Adult': searchProvider.adultCount,
+      'Child': searchProvider.childCount,
+      'Infant': searchProvider.infantCount,
+    };
+
+    final Map<String, List<dynamic>> groupedTravellers = {
+      'Adult': bookProvider.travellers.where((t) => t.type == 'Adult').toList(),
+      'Child': bookProvider.travellers.where((t) => t.type == 'Child').toList(),
+      'Infant': bookProvider.travellers.where((t) => t.type == 'Infant').toList(),
+    };
+
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Travelers Details',
-              style: kTextStyle.copyWith(
-                  color: kTitleColor, fontWeight: FontWeight.bold)),
-          const SizedBox(
-            height: 20,
-          ),
-          ...bookProvider.travellers
-              .asMap()
-              .entries
-              .map((entry) {
-            final index = entry.key;
-            final traveller = entry.value;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
-                color: kWhite,
-                boxShadow: const [
-                  BoxShadow(
-                      color: kBorderColorTextField,
-                      blurRadius: 7.0,
-                      spreadRadius: 2.0,
-                      offset: Offset(0, 2))
-                ],
-              ),
-              child: ListTile(
-                leading: const Icon(Icons.check_box, color: kPrimaryColor),
-                title: Text(
-                  '${traveller.firstName} ${traveller.lastName}',
-                  style: kTextStyle.copyWith(color: kTitleColor),
-                ),
-                subtitle: Text(
-                  '${traveller.gender} | ${DateFormat('dd MMM yyyy').format(
-                      traveller.dateOfBirth)}',
-                  style: kTextStyle.copyWith(color: kSubTitleColor),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    bookProvider.removeTraveller(index);
-                  },
-                ),
-              ),
-            );
-          }).toList(),
-          const SizedBox(height: 10),
-          ButtonGlobalWithIcon(
-            buttontext: 'Add Traveller Details',
-            buttonTextColor: kPrimaryColor,
-            buttonIcon: FeatherIcons.plus,
-            buttonDecoration: kButtonDecoration.copyWith(
-              color: kWhite,
-              borderRadius: BorderRadius.circular(8.0),
-              border: Border.all(color: kPrimaryColor.withOpacity(0.5)),
+          Text(
+            'Travelers Details',
+            style: kTextStyle.copyWith(
+                color: kTitleColor, fontWeight: FontWeight.bold
             ),
-            onPressed: onAddTraveller,
           ),
+          const SizedBox(height: 20),
+          ...typeLimits.entries.where((e) => e.value > 0).expand((entry) {
+            final type = entry.key;
+            final limit = entry.value;
+            final travellersOfType = groupedTravellers[type] ?? [];
+            final currentCount = travellersOfType.length;
+
+            return [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  type,
+                  style: kTextStyle.copyWith(
+                      color: kPrimaryColor, fontWeight: FontWeight.bold, fontSize: 16
+                  ),
+                ),
+              ),
+              ...travellersOfType.asMap().entries.map((tEntry) {
+                final index = bookProvider.travellers.indexOf(tEntry.value);
+                final traveller = tEntry.value;
+                final bool showPassport = (traveller.passportNumber != null && traveller.passportNumber.trim().isNotEmpty)
+                    || (traveller.passportExpiry != null);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.0),
+                    color: kWhite,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: kBorderColorTextField,
+                        blurRadius: 7.0,
+                        spreadRadius: 2.0,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    leading: const Icon(Icons.check_box, color: kPrimaryColor),
+                    title: Text(
+                      '${traveller.firstName} ${traveller.lastName}',
+                      style: kTextStyle.copyWith(color: kTitleColor),
+                    ),
+                    subtitle:Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${traveller.gender} | ${DateFormat('dd MMM yyyy').format(traveller.dateOfBirth)}',
+                          style: kTextStyle.copyWith(color: kSubTitleColor),
+                        ),
+                        if (showPassport) ...[
+                          if (traveller.passportNumber != null && traveller.passportNumber.trim().isNotEmpty)
+                            Text(
+                              'Passport Number: ${traveller.passportNumber}',
+                              style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 13),
+                            ),
+                          if (traveller.passportExpiry != null)
+                            Text(
+                              ' Passport Expiry: ${DateFormat('dd MMM yyyy').format(traveller.passportExpiry)}',
+                              style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 13),
+                            ),
+                        ],
+                      ],
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        bookProvider.removeTraveller(index);
+                      },
+                    ),
+                  ),
+                );
+              }),
+              if (currentCount < limit)
+                _AddTravellerTypeButton(
+                  type: type,
+                  limit: limit,
+                  currentCount: currentCount,
+                  onAdd: () => _showAddTravellerModal(context, type, limit),
+                ),
+            ];
+          }),
         ],
       ),
     );
   }
 }
 
-// Modal
-class RoundTripAddTravellerModal extends StatefulWidget {
-  const RoundTripAddTravellerModal({Key? key}) : super(key: key);
+class AddTravellerModal extends StatefulWidget {
+  final String type;
+  final int typeLimit;
+  final FlightDetail flight;
+  const AddTravellerModal({Key? key, required this.type, required this.typeLimit, required this.flight}) : super(key: key);
 
   @override
-  State<RoundTripAddTravellerModal> createState() => _RoundTripAddTravellerModalState();
+  State<AddTravellerModal> createState() => _AddTravellerModalState();
 }
 
-class _RoundTripAddTravellerModalState extends State<RoundTripAddTravellerModal> {
+class _AddTravellerModalState extends State<AddTravellerModal> {
   late TextEditingController _dobController;
+  late TextEditingController _passportExpiryController;
 
   @override
   void initState() {
     super.initState();
     _dobController = TextEditingController();
+    _passportExpiryController = TextEditingController();
   }
 
   @override
   void dispose() {
     _dobController.dispose();
+    _passportExpiryController.dispose();
     super.dispose();
   }
 
@@ -694,6 +712,17 @@ class _RoundTripAddTravellerModalState extends State<RoundTripAddTravellerModal>
       }
     }
 
+    if(provider.passportExpiry != null){
+      final formatted = DateFormat('dd MMM yyyy').format(provider.passportExpiry!);
+      if(_passportExpiryController.text != formatted){
+        _passportExpiryController.text = formatted;
+      }
+    }else{
+      if(_passportExpiryController.text.isNotEmpty){
+        _passportExpiryController.text = '';
+      }
+    }
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -704,7 +733,6 @@ class _RoundTripAddTravellerModalState extends State<RoundTripAddTravellerModal>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
@@ -724,8 +752,6 @@ class _RoundTripAddTravellerModalState extends State<RoundTripAddTravellerModal>
                   ],
                 ),
               ),
-
-              // Content
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -790,6 +816,34 @@ class _RoundTripAddTravellerModalState extends State<RoundTripAddTravellerModal>
                       },
                     ),
                     const SizedBox(height: 20),
+                    if (widget.flight.passport == true) ...[
+                      _textField(
+                          "Passport Number",
+                          "Passport Number",
+                          onChanged: provider.setPassportNumber),
+                      const SizedBox(height: 20),
+                      _textField(
+                          "Passport Expiry",
+                          "Select date",
+                          controller: _passportExpiryController,
+                          onChanged: (_) {},
+                          suffixIcon: Icons.calendar_today,
+                          onIconTap: () async {
+                            final today = DateTime.now();
+                            final picked = await showDatePicker(
+                                context: context,
+                                initialDate: provider.passportExpiry ?? today,
+                                firstDate: today,
+                                lastDate: DateTime(2099)
+                            );
+                            if(picked != null){
+                              provider.setPassportExpiry(picked);
+                              _passportExpiryController.text = DateFormat('dd MMM yyyy').format(picked);
+                            }
+                          }
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     ButtonGlobalWithoutIcon(
                       buttontext: 'Done',
                       buttonDecoration: kButtonDecoration.copyWith(
@@ -797,16 +851,13 @@ class _RoundTripAddTravellerModalState extends State<RoundTripAddTravellerModal>
                         borderRadius: BorderRadius.circular(30),
                       ),
                       onPressed: () {
-                        final searchProvider =
-                        context.read<SearchFlightProvider>();
-                        final maxTravellers = searchProvider.adultCount +
-                            searchProvider.childCount +
-                            searchProvider.infantCount;
-
                         final success = context
                             .read<BookProceedProvider>()
                             .addTraveller(context,
-                            maxTravellers: maxTravellers);
+                            type: widget.type,
+                            typeLimit: widget.typeLimit,
+                            isPassportRequired: widget.flight.passport == true
+                        );
                         if (success) {
                           Navigator.pop(context);
                         }
@@ -856,6 +907,38 @@ class _RoundTripAddTravellerModalState extends State<RoundTripAddTravellerModal>
   }
 }
 
+class _AddTravellerTypeButton extends StatelessWidget {
+  final String type;
+  final int limit;
+  final int currentCount;
+  final VoidCallback onAdd;
+
+  const _AddTravellerTypeButton({
+    required this.type,
+    required this.limit,
+    required this.currentCount,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ButtonGlobalWithIcon(
+        buttontext: 'Add New $type (${currentCount}/$limit)',
+        buttonTextColor: kPrimaryColor,
+        buttonIcon: FeatherIcons.plus,
+        buttonDecoration: kButtonDecoration.copyWith(
+          color: kWhite,
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: kPrimaryColor.withOpacity(0.5)),
+        ),
+        onPressed: currentCount < limit ? onAdd : null,
+      ),
+    );
+  }
+}
+
 // ============================= BOOKING DETAILS =============================
 class RoundTripBookingDetailsCard extends StatelessWidget {
   final VoidCallback onEdit;
@@ -897,9 +980,9 @@ class RoundTripBookingDetailsCard extends StatelessWidget {
             ListTile(
               leading: _icon(Icons.phone),
               title: Text(  bookProvider.phone.isNotEmpty
-                  ? bookProvider.phone
+                  ?'${bookProvider.countryCode.isNotEmpty ? bookProvider.countryCode : ""} ${bookProvider.phone}'
                   : 'Add Mobile Number',
-                  style: kTextStyle.copyWith(color: kPrimaryColor)),
+                  style: kTextStyle.copyWith(color: kSubTitleColor)),
             ),
             const Divider(thickness: 1, color: kBorderColorTextField),
           ],
@@ -1040,250 +1123,6 @@ class _RoundTripBookingModalState extends State<RoundTripBookingModal> {
 }
 
 
-// ============================= Passport DETAILS =============================
-class RoundTripPassportDetailsCard extends StatelessWidget {
-  final VoidCallback onAddPassport;
-
-  const RoundTripPassportDetailsCard({Key? key, required this.onAddPassport})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final bookProvider = context.watch<BookProceedProvider>();
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Passport Details',
-              style: kTextStyle.copyWith(
-                  color: kTitleColor, fontWeight: FontWeight.bold)),
-          const SizedBox(
-            height: 20,
-          ),
-          ...bookProvider.passports
-              .asMap()
-              .entries
-              .map((entry) {
-            final index = entry.key;
-            final passport = entry.value;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
-                color: kWhite,
-                boxShadow: const [
-                  BoxShadow(
-                      color: kBorderColorTextField,
-                      blurRadius: 7.0,
-                      spreadRadius: 2.0,
-                      offset: Offset(0, 2))
-                ],
-              ),
-              child: ListTile(
-                leading: const Icon(Icons.check_box, color: kPrimaryColor),
-                title: Text(
-                  passport.passportNumber,
-                  style: kTextStyle.copyWith(color: kTitleColor),
-                ),
-                subtitle: Text(
-                  DateFormat('dd MMM yyyy').format(passport.passportExpiry),
-                  style: kTextStyle.copyWith(color: kSubTitleColor),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    bookProvider.removePassport(index);
-                  },
-                ),
-              ),
-            );
-          }).toList(),
-          const SizedBox(height: 10),
-          ButtonGlobalWithIcon(
-            buttontext: 'Add Passport Details',
-            buttonTextColor: kPrimaryColor,
-            buttonIcon: FeatherIcons.plus,
-            buttonDecoration: kButtonDecoration.copyWith(
-              color: kWhite,
-              borderRadius: BorderRadius.circular(8.0),
-              border: Border.all(color: kPrimaryColor.withOpacity(0.5)),
-            ),
-            onPressed: onAddPassport,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Modal
-class RoundTripAddPassportModal extends StatefulWidget {
-  const RoundTripAddPassportModal({Key? key}) : super(key: key);
-
-  @override
-  State<RoundTripAddPassportModal> createState() => _RoundTripAddPassportModal();
-}
-
-class _RoundTripAddPassportModal extends State<RoundTripAddPassportModal> {
-  late TextEditingController _passportController;
-
-  @override
-  void initState() {
-    super.initState();
-    _passportController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _passportController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<BookProceedProvider>();
-
-    if (provider.passportExpiry != null) {
-      final formatted = DateFormat('dd MMM yyyy').format(provider.passportExpiry!);
-      if (_passportController.text != formatted) {
-        _passportController.text = formatted;
-      }
-    } else {
-      if (_passportController.text.isNotEmpty) {
-        _passportController.text = '';
-      }
-    }
-
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Text(
-                      'Add Passports Details',
-                      style: kTextStyle.copyWith(
-                        color: kTitleColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(FeatherIcons.x, color: kSubTitleColor),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    _textField("Passport Number",
-                        "Passport Number",
-                        onChanged: provider.setPassportNumber),
-                    const SizedBox(height: 20),
-                    _textField(
-                      "Passport Expiry",
-                      "Select date",
-                      controller: _passportController,
-                      onChanged: (_) {},
-                      suffixIcon: Icons.calendar_today,
-                      onIconTap: () async {
-                        final today = DateTime.now();
-                        final passportPicked = await showDatePicker(
-                          context: context,
-                          initialDate:
-                          provider.passportExpiry ?? today,
-                          firstDate: today,
-                          lastDate: DateTime(2099),
-                        );
-                        if (passportPicked != null) {
-                          provider.setPassportExpiry(passportPicked);
-                          _passportController.text =
-                              DateFormat('dd MMM yyyy').format(passportPicked);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    ButtonGlobalWithoutIcon(
-                      buttontext: 'Done',
-                      buttonDecoration: kButtonDecoration.copyWith(
-                        color: kPrimaryColor,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      onPressed: () {
-                        final searchProvider =
-                        context.read<SearchFlightProvider>();
-                        final maxPassports = searchProvider.adultCount +
-                            searchProvider.childCount +
-                            searchProvider.infantCount;
-
-                        final success = context
-                            .read<BookProceedProvider>()
-                            .addPassport(context,
-                            maxPassports: maxPassports);
-                        if (success) {
-                          Navigator.pop(context);
-                        }
-                      },
-                      buttonTextColor: kWhite,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static Widget _textField(
-      String label,
-      String hint, {
-        required ValueChanged<String> onChanged,
-        TextEditingController? controller,
-        String? initialValue,
-        IconData? suffixIcon,
-        VoidCallback? onIconTap,
-      }) {
-    return TextFormField(
-      controller: controller,
-      initialValue: initialValue,
-      onChanged: onChanged,
-      readOnly: onIconTap != null,
-      onTap: onIconTap,
-      decoration: kInputDecoration.copyWith(
-        labelText: label,
-        hintText: hint,
-        labelStyle: kTextStyle.copyWith(color: kTitleColor),
-        hintStyle: kTextStyle.copyWith(color: kSubTitleColor),
-        border: const OutlineInputBorder(),
-        suffixIcon: suffixIcon != null
-            ? IconButton(
-          icon: Icon(suffixIcon, color: kPrimaryColor),
-          onPressed: onIconTap,
-        )
-            : null,
-      ),
-    );
-  }
-}
 
 // ============================= HELPER CARD DECORATION =============================
 Widget _card({required Widget child}) {

@@ -8,6 +8,8 @@ import 'package:flightbooking/screen/book%20proceed/book_proceed.dart';
 import 'package:flightbooking/screen/book%20proceed/round_trip_book_proceed.dart';
 import 'package:flightbooking/screen/home/home_screen.dart';
 import 'package:flightbooking/screen/notifications/notification.dart';
+import 'package:flightbooking/screen/payment/payment.dart';
+import 'package:flightbooking/screen/pricing/oneway/round_trip_pricing.dart';
 import 'package:flightbooking/screen/profile/my_profile/my_profile.dart';
 import 'package:flightbooking/screen/profile/privacy_policy/privacy_policy.dart';
 import 'package:flightbooking/screen/profile/refund_policy/refund_policy.dart';
@@ -18,13 +20,16 @@ import 'package:flightbooking/screen/search/flight_details.dart';
 import 'package:flightbooking/screen/search/round_trip_flight_details.dart';
 import 'package:flightbooking/screen/search/search.dart';
 import 'package:flightbooking/screen/search/search_result.dart';
+import 'package:flightbooking/screen/seat_map_screen/seat_map_round_trip_screen.dart';
 import 'package:flightbooking/widgets/constant.dart';
 import 'package:flutter/material.dart';
 
 import '../models/flight_details_model.dart';
 import '../screen/home/home.dart';
+import '../screen/pricing/oneway/one_way_pricing.dart';
 import '../screen/profile/profile_screen.dart';
 import '../screen/search/round_trip_search_result.dart';
+import '../screen/seat_map_screen/seat_map_screen_for_one_way.dart';
 
 class AppRoutes {
 
@@ -48,8 +53,13 @@ class AppRoutes {
   static const String filter = "/Filter";
   static const String flightDetails = "/FlightDetails";
   static const String roundTripFlightDetails = "/RoundTripFlightDetails";
+  static const String pricingRules = "/PricingTabView";
+  static const String roundTripPricingRules = "/RoundTripPricingTabView";
   static const String bookProceed = "/BookProceed";
   static const String roundTripBookProceed = "/RoundTripBookProceed";
+ static const String payment = "/Payment";
+ static const String seatMap = "/SeatMap";
+ static const String roundTripSeatMap = "/RoundTripSeatMapScreen";
 }
 
 
@@ -73,7 +83,7 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const ForgotPassword());
 
       case AppRoutes.home:
-        return MaterialPageRoute(builder: (_) =>  const Home());
+        return MaterialPageRoute(builder: (_) =>   Home());
 
       case AppRoutes.profile:
         return MaterialPageRoute(builder: (_) => const Profile());
@@ -133,6 +143,30 @@ class RouteGenerator {
         }
           return _errorRoute("Invalid round trip Details");
 
+      case AppRoutes.pricingRules:
+        final args = settings.arguments;
+        if(args is FlightDetail) {
+        return MaterialPageRoute(
+            builder: (_) => PricingTabView(flight: args,),
+          );
+        }
+        return _errorRoute("Invalid or missing Details ");
+
+      case AppRoutes.roundTripPricingRules:
+        final args = settings.arguments;
+        if(args is Map<String, dynamic>){
+          final onwardp = args['onwardFlight'];
+          final returnp = args['returnFlight'];
+        if(onwardp is FlightDetail && returnp is FlightDetail){
+    return MaterialPageRoute(
+    builder: (_) =>  RoundTripPricingTabView(onwardFlight: onwardp,
+    returnFlight: returnp,));
+        }
+        }
+        return _errorRoute("Invalid or Missing RoundTripBookProceed arguments");
+
+
+
 
       case AppRoutes.bookProceed:
         final args = settings.arguments;
@@ -156,6 +190,46 @@ class RouteGenerator {
           }
         }
         return _errorRoute("Invalid or Missing RoundTripBookProceed arguments");
+
+      case AppRoutes.seatMap:
+        
+        final args = settings.arguments;
+        if(args is FlightDetail) {
+          return MaterialPageRoute(
+            builder: (_) => SeatMapScreen(flight: args,),
+            // builder: (_) => NewSeatMapScreen(),
+          );
+        }
+        return _errorRoute("Invalid or missing FlightDetail for SeatMap");
+          
+      case AppRoutes.roundTripSeatMap:
+        final args = settings.arguments;
+        if(args is Map<String, dynamic>){
+          final onwardm = args['onwardFlight'];
+          final returnm = args['returnFlight'];
+          if(onwardm is FlightDetail && returnm is FlightDetail){
+            return MaterialPageRoute(
+                builder: (_) => RoundTripSeatMapScreen(
+                  onwardFlight: onwardm, returnFlight: returnm,
+                ));
+          }
+        }
+
+        return _errorRoute("Invalid or missing Round trip meal details");
+
+
+      case AppRoutes.payment:
+        final args = settings.arguments;
+        if(args is FlightDetail){
+          return MaterialPageRoute(builder: (_) => Payment(onwardFlight: args));
+        }else if(args is Map<String, dynamic>){
+          final onward = args['onwardFlight'];
+          final returnF = args['returnFlight'];
+          if(onward is FlightDetail){
+            return MaterialPageRoute(builder: (_) => Payment(onwardFlight: onward, returnFlight: returnF is FlightDetail ? returnF : null,));
+          }
+        }
+        return _errorRoute("Invalid or missing payment arguments");
 
 
       default:

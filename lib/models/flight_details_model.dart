@@ -83,6 +83,8 @@ class FlightResponse {
 class FlightDetail {
   final String source;
   final double fare;
+  final double baseAmount;
+  final double grossAmount;
   final double adultFare;
   final double childFare;
   final double infantFare;
@@ -129,6 +131,8 @@ class FlightDetail {
   FlightDetail({
     required this.source,
     required this.fare,
+    required this.baseAmount,
+    required this.grossAmount,
     required this.adultFare,
     required this.childFare,
     required this.infantFare,
@@ -193,6 +197,8 @@ class FlightDetail {
     return FlightDetail(
       source: json['source'] ?? '',
       fare: parseDouble(json['fare']),
+      baseAmount: parseDouble(json['BaseAmount']),
+      grossAmount: parseDouble(json['GrossAmount']),
       adultFare: parseDouble(json['adult_fare']),
       childFare: parseDouble(json['child_fare']),
       infantFare: parseDouble(json['infant_fare']),
@@ -240,6 +246,8 @@ class FlightDetail {
   Map<String, dynamic> toJson() => {
     'source': source,
     'fare': fare,
+    'BaseAmount' : baseAmount,
+    'GrossAmount' : grossAmount,
     'adult_fare': adultFare,
     'child_fare': childFare,
     'infant_fare': infantFare,
@@ -280,6 +288,10 @@ class FlightDetail {
 class Stopover{
   final String departure;
   final String arrival;
+  final String flightId;
+  final String flightNumber;
+  final String airLineCode;
+  final String airlineName;
   final String airportOrigin;
   final String airportNameOrigin;
   final String cityOrigin;
@@ -298,6 +310,10 @@ class Stopover{
   Stopover({
     required this.departure,
     required this.arrival,
+    required this.flightId,
+    required this.flightNumber,
+    required this.airLineCode,
+    required this.airlineName,
     required this.airportOrigin,
     required this.airportNameOrigin,
     required this.cityOrigin,
@@ -323,6 +339,10 @@ class Stopover{
     return Stopover(
       departure: json['departure'] ?? '',
       arrival: json['arrival'] ?? '',
+      flightId: json['FlightID'] ?? '',
+      flightNumber: json['flight_number'] ?? '',
+      airLineCode: json['AirlineCode'] ?? '',
+      airlineName: json['AirlineName'] ?? '',
       airportOrigin: json['airport_Origin'] ?? '',
       airportNameOrigin: json['airport_name_Origin'] ?? '',
       cityOrigin: json['city_Origin'] ?? '',
@@ -340,9 +360,15 @@ class Stopover{
     );
   }
 
+  get origin => null;
+
   Map<String, dynamic> toJson() => {
     'departure': departure,
     'arrival': arrival,
+    'FlightID' : flightId,
+    'flight_number' : flightNumber,
+    'AirlineCode' : airLineCode,
+    'AirlineName' : airlineName,
     'airport_Origin': airportOrigin,
     'airport_name_Origin': airportNameOrigin,
     'city_Origin': cityOrigin,

@@ -13,6 +13,12 @@ String countryUrl2 = 'https://app.farehawker.com/request.php';
 
 // String flightSearch = '${apiBaseUrl2}request.php';
 String flightSearch = 'https://app.farehawker.com/request.php';
+String flightSearchUrl = 'https://app.farehawker.com/api/search.php';
+String fareRulesUrl = 'https://app.farehawker.com/api/fareRule.php';
+String oneWayPricingRule = 'https://app.farehawker.com/api/pricing.php';
+String seatMapUrl = 'https://app.farehawker.com/api/seatmap.php';
+String bookingUrl = 'https://app.farehawker.com/api/booking.php';
+String applicantDetailsUrl = 'https://app.farehawker.com/api/applicantDetails.php';
 String paymentSearch = 'https://app.farehawker.com/paymentRequest.php';
 String register = 'https://app.farehawker.com/request.php';
 String updateProfileUrl = 'https://app.farehawker.com/request.php';
@@ -27,4 +33,4 @@ String refundPolicy = 'https://app.farehawker.com/request.php';
 
 
 ////Group Booking
-const String groupBooking = 'https://farehawker.com/api/submit-group';
+const String groupBooking = 'https://app.farehawker.com/api/groupBooking.php';

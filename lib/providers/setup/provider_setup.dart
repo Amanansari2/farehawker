@@ -1,8 +1,11 @@
 import 'package:flightbooking/api_services/internet_status.dart';
 import 'package:flightbooking/providers/fare_rule_provider.dart';
 import 'package:flightbooking/providers/filter_provider.dart';
+import 'package:flightbooking/providers/hidden_booking_provider.dart';
 import 'package:flightbooking/providers/login_provider.dart';
 import 'package:flightbooking/providers/logout_provider.dart';
+import 'package:flightbooking/providers/pricing_request%20_provider.dart';
+import 'package:flightbooking/providers/seat_map_provider.dart';
 import 'package:flightbooking/providers/update_profile_provider.dart';
 import 'package:flightbooking/repository/fare_rule_repo.dart';
 import 'package:provider/provider.dart';
@@ -63,9 +66,18 @@ final List<SingleChildWidget> appProviders = [
     create: (_) => FilterProvider(),
   ),
 
+  ChangeNotifierProvider<PricingProvider>(create: (_) => PricingProvider()),
+
   ChangeNotifierProvider<BookProceedProvider>(
       create: (_) => BookProceedProvider(repository:FareRulesRepository())
   ),
+
+  ChangeNotifierProvider<SeatMapProvider>(
+      create: (_) => SeatMapProvider()),
+
+  ChangeNotifierProvider<HiddenBookingProvider>(
+      create: (_) => HiddenBookingProvider()),
+
 
   /// Group booking providers
   Provider<GroupBookingRepository>(
@@ -73,9 +85,7 @@ final List<SingleChildWidget> appProviders = [
       Provider.of<PostService>(context, listen: false),
     ),
   ),
-  ChangeNotifierProvider<GroupBookingController>(
-    create: (context) => GroupBookingController(
-      Provider.of<GroupBookingRepository>(context, listen: false),
-    ),
+  ChangeNotifierProvider<GroupBookingProvider>(
+    create: (context) => GroupBookingProvider(),
   ),
 ];

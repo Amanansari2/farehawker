@@ -502,49 +502,54 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
         trailing: SizedBox(
           height: 80,
           width: 200,
-          child: ButtonGlobalWithoutIcon(
-            buttontext: 'Proceed to Book',
-            buttonDecoration: kButtonDecoration.copyWith(
-              color: kPrimaryColor,
-              borderRadius: BorderRadius.circular(30.0),
-            ),
-            onPressed: () async {
-              final fareProvider = context.read<BookProceedProvider>();
-              await fareProvider.loadFareRulesForRoundTrip(
-                onwardFlight: widget.flight,
-                returnFlight: widget.returnFlight!,
-              );
+          child: Consumer<BookProceedProvider>(
+            builder: (context, fareProvider, _) {
+              return ButtonGlobalWithoutIcon(
+                buttontext: fareProvider.isLoading ? "Please wait..." :'Proceed to Book',
+                buttonDecoration: kButtonDecoration.copyWith(
+                  color: kPrimaryColor,
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                onPressed: fareProvider.isLoading
+                ? null
+                  : () async {
+                  await fareProvider.loadFareRulesForRoundTrip(
+                    onwardFlight: widget.flight,
+                    returnFlight: widget.returnFlight!,
+                  );
 
-              if (fareProvider.error != null) {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return CustomDialogBox(
-                      title: "Error",
-                      descriptions: fareProvider.error,
-                      text: "Close",
-                      titleColor: kRedColor,
-                      img: 'images/dialog_error.png',
-                      functionCall: () {
-                        Navigator.of(context).pop(); // close dialog
+                  if (fareProvider.error != null) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return CustomDialogBox(
+                          title: "Error",
+                          descriptions: fareProvider.error,
+                          text: "Close",
+                          titleColor: kRedColor,
+                          img: 'images/dialog_error.png',
+                          functionCall: () {
+                            Navigator.of(context).pop(); // close dialog
+                          },
+                        );
                       },
                     );
-                  },
-                );
-              } else {
-                // ✅ success → navigate
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.roundTripBookProceed,
-                  arguments: {
-                    'onwardFlight': widget.flight,
-                    'returnFlight': widget.returnFlight
-                  },
-                );
-              }
-            },
+                  } else {
+                    // ✅ success → navigate
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.roundTripBookProceed,
+                      arguments: {
+                        'onwardFlight': widget.flight,
+                        'returnFlight': widget.returnFlight
+                      },
+                    );
+                  }
+                },
 
-            buttonTextColor: kWhite,
+                buttonTextColor: kWhite,
+              );
+            }
           ),
         ),
       ),

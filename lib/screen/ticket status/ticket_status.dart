@@ -29,91 +29,91 @@ class _TicketStatusState extends State<TicketStatus> {
         title: Text(lang.S.of(context).ticketStatusTitle, style: const TextStyle(color: kWhite),),
         iconTheme: const IconThemeData(color: kWhite),
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(color: kDarkWhite),
-        child: Container(
-          padding: const EdgeInsets.all(10.0),
-          height: 90,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30.0),
-              topRight: Radius.circular(30.0),
-            ),
-            color: kWhite,
-            boxShadow: [
-              BoxShadow(
-                color: kDarkWhite,
-                offset: Offset(
-                  0,
-                  -2,
-                ),
-                blurRadius: 7.0,
-                spreadRadius: 2.0,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                height: 50,
-                width: double.infinity,
-                child:
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    elevation: 0.0,
-                    backgroundColor: kPrimaryColor,
-                  ),
-                  onPressed: () async{
-
-
-                      // String fileUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
-                      //
-                      // final directory = await getExternalStorageDirectory();
-                      // String filePath = '${directory!.path}/downloadedFile.pdf';
-                      //
-                      // try {
-                      //   var response = await http.get(Uri.parse(fileUrl));
-                      //
-                      //
-                      //   if (response.statusCode == 200) {
-                      //     File file = File(filePath);
-                      //     await file.writeAsBytes(response.bodyBytes);
-                      //     print('File downloaded to $filePath');
-                      //   } else {
-                      //     print('Error downloading file: ${response.statusCode}');
-                      //   }
-                      // } catch (e) {
-                      //   print('Error: $e');
-                      // }
-
-
-                  },
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Download',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: kWhite),
-                      ),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      FaIcon(
-                        FeatherIcons.downloadCloud,
-                        size: 25,
-                      )
-                    ],
-                  ),
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
+      // bottomNavigationBar: Container(
+      //   decoration: const BoxDecoration(color: kDarkWhite),
+      //   child: Container(
+      //     padding: const EdgeInsets.all(10.0),
+      //     height: 90,
+      //     decoration: const BoxDecoration(
+      //       borderRadius: BorderRadius.only(
+      //         topLeft: Radius.circular(30.0),
+      //         topRight: Radius.circular(30.0),
+      //       ),
+      //       color: kWhite,
+      //       boxShadow: [
+      //         BoxShadow(
+      //           color: kDarkWhite,
+      //           offset: Offset(
+      //             0,
+      //             -2,
+      //           ),
+      //           blurRadius: 7.0,
+      //           spreadRadius: 2.0,
+      //         ),
+      //       ],
+      //     ),
+      //     child: Column(
+      //       mainAxisAlignment: MainAxisAlignment.center,
+      //       children: [
+      //         SizedBox(
+      //           height: 50,
+      //           width: double.infinity,
+      //           child:
+      //           ElevatedButton(
+      //             style: ElevatedButton.styleFrom(
+      //               shape: RoundedRectangleBorder(
+      //                 borderRadius: BorderRadius.circular(40),
+      //               ),
+      //               elevation: 0.0,
+      //               backgroundColor: kPrimaryColor,
+      //             ),
+      //             onPressed: () async{
+      //
+      //
+      //                 // String fileUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+      //                 //
+      //                 // final directory = await getExternalStorageDirectory();
+      //                 // String filePath = '${directory!.path}/downloadedFile.pdf';
+      //                 //
+      //                 // try {
+      //                 //   var response = await http.get(Uri.parse(fileUrl));
+      //                 //
+      //                 //
+      //                 //   if (response.statusCode == 200) {
+      //                 //     File file = File(filePath);
+      //                 //     await file.writeAsBytes(response.bodyBytes);
+      //                 //     print('File downloaded to $filePath');
+      //                 //   } else {
+      //                 //     print('Error downloading file: ${response.statusCode}');
+      //                 //   }
+      //                 // } catch (e) {
+      //                 //   print('Error: $e');
+      //                 // }
+      //
+      //
+      //             },
+      //             child: const Row(
+      //               mainAxisAlignment: MainAxisAlignment.center,
+      //               children: [
+      //                 Text(
+      //                   'Download',
+      //                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: kWhite),
+      //                 ),
+      //                 SizedBox(
+      //                   width: 8,
+      //                 ),
+      //                 FaIcon(
+      //                   FeatherIcons.downloadCloud,
+      //                   size: 25,
+      //                 )
+      //               ],
+      //             ),
+      //           ),
+      //         )
+      //       ],
+      //     ),
+      //   ),
+      // ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Container(

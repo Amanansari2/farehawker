@@ -17,7 +17,7 @@ class FareRulesRepository {
     required String resultIndex,
   }) async {
     final customHeaders = {
-      'action': 'GetFareRule',
+      'action': 'TBO',
       'api-key': AppConfigs.apiKey,
     };
     final body = {
@@ -27,21 +27,10 @@ class FareRulesRepository {
       "ResultIndex": resultIndex,
     };
 
-    // final response = await postService.postRequest(
-    //     endPoint: flightSearch,
-    //     body: body,
-    //     requireAuth: false,
-    //     customHeaders: customHeaders
-    // );
-    //
-    // if (response['status'] == 'success') {
-    //   final rules = response['data']['Response']['FareRules'] as List;
-    //   return rules.isNotEmpty ? rules.first['FareRuleDetail'] as String : '';
-    // }
-    // throw Exception(response['message'] ?? 'Unknown error');
+
     try {
       final response = await postService.postRequest(
-        endPoint: flightSearch,
+        endPoint: fareRulesUrl,
         body: body,
         requireAuth: false,
         customHeaders: customHeaders,
@@ -64,36 +53,22 @@ class FareRulesRepository {
   }
 
   Future<String> fetchAirIqFareRulesText({
-    required String source,
+    required List<String> flightIds,
     required String traceId,
-    required String? flightId,
-    required String resultIndex,
+
   }) async {
     final customHeaders = {
-      'action': 'GetFareRule',
+      'action': 'AirIQ',
       'api-key': AppConfigs.apiKey,
     };
+    final flightsInfo = flightIds.map((id) => {'FlightID': id}).toList();
     final body = {
-      "source": source,
-      "traceId": traceId,
-      "flightId": flightId,
-      "ResultIndex": resultIndex,
+      "FlightsInfo": flightsInfo,
+      "Trackid": traceId,
     };
-    //
-    // final response = await postService.postRequest(
-    //     endPoint: flightSearch,
-    //     body: body,
-    //     requireAuth: false,
-    //     customHeaders: customHeaders  );
-    //
-    // if (response['status'] == 'success') {
-    //   return response['data']['FareRuleInfo']['FareRuleText'] as String;
-    // }
-    // throw Exception(response['message'] ?? 'Unknown error');
-
     try {
       final response = await postService.postRequest(
-        endPoint: flightSearch,
+        endPoint: fareRulesUrl,
         body: body,
         requireAuth: false,
         customHeaders: customHeaders,
@@ -121,12 +96,12 @@ class FareRulesRepository {
 
   Future<Map<String, dynamic>>  submitBooking(Map<String, dynamic> payload) async{
     final customHeaders = {
-      'action' : 'InsertApplicantDetails',
+      'action' : 'Insert',
       'api-key' : AppConfigs.apiKey
     };
 
     final response = await postService.postRequest(
-        endPoint: flightSearch,
+        endPoint: applicantDetailsUrl,
         body: payload,
         requireAuth: false,
         customHeaders: customHeaders

@@ -267,37 +267,37 @@ class _ProfileState extends State<Profile> {
                 ),
               ),
               const SizedBox(height: 10),
-              Card(
-                elevation: 1.3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: const BorderSide(color: kBorderColorTextField, width: 0.5),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.only(left: 10.0, right: 10.0),
-                  leading: Container(
-                    height: 34,
-                    width: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xffFF3B30).withOpacity(0.1),
-                    ),
-                    child: const Icon(
-                      Icons.share,
-                      color: Color(0xffFF3B30),
-                    ),
-                  ),
-                  title: Text(
-                    'Share App',
-                    style: kTextStyle.copyWith(color: kTitleColor),
-                  ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 18,
-                    color: kSubTitleColor,
-                  ),
-                ),
-              ),
+              // Card(
+              //   elevation: 1.3,
+              //   shape: RoundedRectangleBorder(
+              //     borderRadius: BorderRadius.circular(8),
+              //     side: const BorderSide(color: kBorderColorTextField, width: 0.5),
+              //   ),
+              //   child: ListTile(
+              //     contentPadding: const EdgeInsets.only(left: 10.0, right: 10.0),
+              //     leading: Container(
+              //       height: 34,
+              //       width: 34,
+              //       decoration: BoxDecoration(
+              //         shape: BoxShape.circle,
+              //         color: const Color(0xffFF3B30).withOpacity(0.1),
+              //       ),
+              //       child: const Icon(
+              //         Icons.share,
+              //         color: Color(0xffFF3B30),
+              //       ),
+              //     ),
+              //     title: Text(
+              //       'Share App',
+              //       style: kTextStyle.copyWith(color: kTitleColor),
+              //     ),
+              //     trailing: const Icon(
+              //       Icons.arrow_forward_ios,
+              //       size: 18,
+              //       color: kSubTitleColor,
+              //     ),
+              //   ),
+              // ),
               const SizedBox(height: 10),
 
 

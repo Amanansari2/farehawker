@@ -46,13 +46,16 @@ class SearchFlightRepository {
     };
 
     final response =  await _postService.postRequest(
-        endPoint: '$flightSearch?page=$page&limit=$limit',
+        endPoint: '$flightSearchUrl?page=$page&limit=$limit',
         body: body,
         requireAuth:  false,
         customHeaders: customHeaders
     );
 
+
+
     if(response['status'] == 'success'){
+
       final flightResponse =  FlightResponse.fromJson(response);
       return {
         'success' : true,
@@ -116,7 +119,7 @@ class SearchFlightRepository {
     };
     try {
       final response = await _postService.postRequest(
-          endPoint: '$flightSearch?page=$page&limit=$limit&page_r=$pageR&limit_r=$limitR',
+          endPoint: '$flightSearchUrl?page=$page&limit=$limit&page_r=$pageR&limit_r=$limitR',
           body: body,
           requireAuth: false,
           customHeaders: customHeaders

@@ -4,6 +4,7 @@ import 'package:flightbooking/widgets/constant.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:html_unescape/html_unescape.dart';
 import '../models/flight_details_model.dart';
 import '../models/traveller_info_model.dart';
 import '../repository/fare_rule_repo.dart';
@@ -24,6 +25,12 @@ class BookProceedProvider extends ChangeNotifier {
   String? get fareRulesContent => _fareRulesContent;
   String? get error => _error;
 
+  String? _onwardFareRulesError;
+  String? _returnFareRulesError;
+
+  String? get onwardFareRulesError => _onwardFareRulesError;
+  String? get returnFareRulesError => _returnFareRulesError;
+
   Future<void> loadFareRulesForFlight(FlightDetail flight) async {
     _isLoading = true;
     _error = null;
@@ -40,10 +47,8 @@ class BookProceedProvider extends ChangeNotifier {
         );
       } else if (flight.source == 'AirIQ') {
         _fareRulesContent = await repository.fetchAirIqFareRulesText(
-          source: flight.source,
           traceId: flight.traceID,
-          flightId: flight.flightID,
-          resultIndex: flight.resultIndex,
+          flightIds: [flight.flightID],
         );
       } else {
         _error = 'Unknown source: ${flight.source}';
@@ -71,46 +76,54 @@ class BookProceedProvider extends ChangeNotifier {
     _error = null;
     _onwardFareRulesContent = null;
     _returnFareRulesContent = null;
+    _onwardFareRulesError = null;
+    _returnFareRulesError = null;
     notifyListeners();
 
     try {
       // Onward
-      if (onwardFlight.source == 'TBO') {
-        _onwardFareRulesContent = await repository.fetchTboFareRulesHtml(
-          source: onwardFlight.source,
-          traceId: onwardFlight.traceID,
-          flightId: onwardFlight.flightID,
-          resultIndex: onwardFlight.resultIndex,
-        );
-      } else if (onwardFlight.source == 'AirIQ') {
-        _onwardFareRulesContent = await repository.fetchAirIqFareRulesText(
-          source: onwardFlight.source,
-          traceId: onwardFlight.traceID,
-          flightId: onwardFlight.flightID,
-          resultIndex: onwardFlight.resultIndex,
-        );
+      try {
+        if (onwardFlight.source == 'TBO') {
+          _onwardFareRulesContent = await repository.fetchTboFareRulesHtml(
+            source: onwardFlight.source,
+            traceId: onwardFlight.traceID,
+            flightId: onwardFlight.flightID,
+            resultIndex: onwardFlight.resultIndex,
+          );
+          _onwardFareRulesError = null;
+        } else if (onwardFlight.source == 'AirIQ') {
+          _onwardFareRulesContent = await repository.fetchAirIqFareRulesText(
+            traceId: onwardFlight.traceID,
+            flightIds: [onwardFlight.flightID],
+          );
+          _onwardFareRulesError = null;
+        }
+      }catch(e) {
+        _onwardFareRulesError = e.toString();
+        _onwardFareRulesContent = null;
       }
 
       // Return
-      if (returnFlight.source == 'TBO') {
-        _returnFareRulesContent = await repository.fetchTboFareRulesHtml(
-          source: returnFlight.source,
-          traceId: returnFlight.traceID,
-          flightId: returnFlight.flightID,
-          resultIndex: returnFlight.resultIndex,
-        );
-      } else if (returnFlight.source == 'AirIQ') {
-        _returnFareRulesContent = await repository.fetchAirIqFareRulesText(
-          source: returnFlight.source,
-          traceId: returnFlight.traceID,
-          flightId: returnFlight.flightID,
-          resultIndex: returnFlight.resultIndex,
-        );
+      try {
+        if (returnFlight.source == 'TBO') {
+          _returnFareRulesContent = await repository.fetchTboFareRulesHtml(
+            source: returnFlight.source,
+            traceId: returnFlight.traceID,
+            flightId: returnFlight.flightID,
+            resultIndex: returnFlight.resultIndex,
+          );
+          _returnFareRulesError = null;
+        } else if (returnFlight.source == 'AirIQ') {
+          _returnFareRulesContent = await repository.fetchAirIqFareRulesText(
+            traceId: returnFlight.traceID,
+            flightIds: [returnFlight.flightID],
+          );
+          _returnFareRulesError = null;
+        }
+      }catch(e){
+        _returnFareRulesError = e.toString();
+        _returnFareRulesContent = null;
       }
-    }catch(e){
-      AppLogger.log('Error loading fare rules: $e');
-      _error = 'Failed to load fare rules: ${e.toString()}';
-      _error = e.toString();
     }finally{
       _isLoading = false;
       notifyListeners();
@@ -165,24 +178,67 @@ class BookProceedProvider extends ChangeNotifier {
   }
 
 
-  String formatFareRulesHtml(String raw) {
-    String withBreaks = raw.replaceAll('\n', '<br>');
-    withBreaks = withBreaks.replaceAllMapped(RegExp(r'-{4,}'),
-            (match) => '<br><br>');
-    final bulletLines = withBreaks
-        .split('*')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    if (bulletLines.isEmpty) return withBreaks;
-
-    final buffer = StringBuffer('<ul>');
-    for (var line in bulletLines) {
-      buffer.write('<li>$line</li>');
+  String formatFareRulesHtml(String? html) {
+    if (html == null || html.trim().isEmpty) {
+      return "<p>No fare rules available</p>";
     }
-    buffer.write('</ul>');
-    return buffer.toString();
+
+    var unescape = HtmlUnescape();
+    String formatted = unescape.convert(html.trim());
+
+    // Remove <script> and <style> tags to avoid rendering issues
+    formatted = formatted.replaceAll(
+        RegExp(r'<script[^>]*>.*?</script>', dotAll: true), '');
+    formatted = formatted.replaceAll(
+        RegExp(r'<style[^>]*>.*?</style>', dotAll: true), '');
+
+    // 2️⃣ Remove <img> tags completely
+    formatted = formatted.replaceAll(
+        RegExp(r'<img[^>]*>', caseSensitive: false), '');
+
+    formatted = formatted.replaceAll(
+        RegExp(r'<img[^>]*\/?>', caseSensitive: false), '');
+
+    // Remove empty rows from tables
+    formatted = formatted.replaceAll(
+        RegExp(r'<tr>\s*<td[^>]*>\s*<\/td>.*?<\/tr>', dotAll: true), '');
+
+    // Style tables for mobile view
+    formatted = formatted.replaceAll(
+        "<table",
+        "<table border='1' style='border-collapse:collapse;width:100%;font-size:14px;'"
+    );
+
+    // Ensure html wrapper
+    if (!formatted.toLowerCase().contains("<html")) {
+      formatted = "<html><body>$formatted</body></html>";
+    }
+    AppLogger.log("Formatted HTML Data: $formatted");
+
+    return formatted;
   }
+
+
+
+
+  // String formatFareRulesHtml(String raw) {
+  //   String withBreaks = raw.replaceAll('\n', '<br>');
+  //   withBreaks = withBreaks.replaceAllMapped(RegExp(r'-{4,}'),
+  //           (match) => '<br><br>');
+  //   final bulletLines = withBreaks
+  //       .split('*')
+  //       .map((e) => e.trim())
+  //       .where((e) => e.isNotEmpty)
+  //       .toList();
+  //   if (bulletLines.isEmpty) return withBreaks;
+  //
+  //   final buffer = StringBuffer('<ul>');
+  //   for (var line in bulletLines) {
+  //     buffer.write('<li>$line</li>');
+  //   }
+  //   buffer.write('</ul>');
+  //   return buffer.toString();
+  // }
 
 
   // ==================== Booking details =========================
@@ -232,89 +288,21 @@ class BookProceedProvider extends ChangeNotifier {
     return true;
   }
 
-  // ==================== Passport details =========================
-
-  String _passportNumber = '';
-  DateTime? _passportExpiry ;
-
-  String get passportNumber => _passportNumber;
-  DateTime? get passportExpiry => _passportExpiry;
 
 
-  void setPassportNumber(String value){
-    _passportNumber = value;
-    notifyListeners();
-  }
 
 
-  void setPassportExpiry(DateTime passportDate){
-    _passportExpiry = passportDate;
-    notifyListeners();
-  }
-  final List<PassportInfo> _passports = [];
-  List<PassportInfo> get passports => List.unmodifiable(_passports);
-
-  bool addPassport(BuildContext context, {int? maxPassports}) {
-
-    if (maxPassports != null && _passports.length >= maxPassports) {
-      _showPassportError(context, 'You can add up to $maxPassports passports only.');
-      return false;
-    }
-
-    // Validation
-    if (_passportNumber.trim().isEmpty) {
-      _showPassportError(context, 'Passport Number is required.');
-      return false;
-    }
 
 
-    if (_passportExpiry == null) {
-      _showPassportError(context, 'Passport Expiry is required.');
-      return false;
-    }
 
 
-    // ✅ Add passport
-    _passports.add(PassportInfo(
-      passportNumber: _passportNumber,
-      passportExpiry: _passportExpiry!
-    ));
-
-    resetPassportForm();
-    notifyListeners();
-    return true;
-  }
-
-  void _showPassportError(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext ctx) {
-        return CustomDialogBox(
-          title: "Field Required",
-          descriptions: message,
-          text: "OK",
-          titleColor: kRedColor,
-          img: 'images/dialog_error.png',
-          functionCall: () {
-            Navigator.of(ctx).pop(); // close dialog
-          },
-        );
-      },
-    );
-  }
 
 
-  void resetPassportForm() {
-    _passportNumber = '';
-    _passportExpiry = null;
-  }
 
-  void removePassport(int index) {
-    if (index >= 0 && index < _passports.length) {
-      _passports.removeAt(index);
-      notifyListeners();
-    }
-  }
+
+
+
+
 
 
   // ==================== Traveller details =========================
@@ -330,10 +318,16 @@ class BookProceedProvider extends ChangeNotifier {
   String _firstName = '';
   String _lastName = '';
   DateTime? _dateOfBirth;
+  String _passportNumber = '';
+  DateTime? _passportExpiry ;
+
+
 
   String get firstName => _firstName;
   String get lastName => _lastName;
   DateTime? get dateOfBirth => _dateOfBirth;
+  String get passportNumber => _passportNumber;
+  DateTime? get passportExpiry => _passportExpiry;
 
   void setFirstName(String value) {
     _firstName = value;
@@ -350,15 +344,29 @@ class BookProceedProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPassportNumber(String value){
+    _passportNumber = value;
+    notifyListeners();
+  }
+
+  void setPassportExpiry(DateTime passportDate){
+    _passportExpiry = passportDate;
+    notifyListeners();
+  }
+
 
   final List<TravellerInfo> _travellers = [];
   List<TravellerInfo> get travellers => List.unmodifiable(_travellers);
 
 
-  bool addTraveller(BuildContext context, {int? maxTravellers}) {
-
-    if (maxTravellers != null && _travellers.length >= maxTravellers) {
-      _showError(context, 'You can add up to $maxTravellers travellers only.');
+  bool addTraveller(BuildContext context, {
+    required String type,
+    required int typeLimit,
+    required bool isPassportRequired,
+  }) {
+    final currentTypeCount = _travellers.where((t) => t.type == type).length;
+    if (currentTypeCount >= typeLimit) {
+      _showError(context, 'You can only add $typeLimit $type(s).');
       return false;
     }
 
@@ -383,17 +391,40 @@ class BookProceedProvider extends ChangeNotifier {
       return false;
     }
 
+    if (isPassportRequired) {
+      if (_passportNumber == null || _passportNumber.trim().isEmpty) {
+        _showError(context, 'Passport number is required.');
+        return false;
+      }
+      if (_passportExpiry == null) {
+        _showError(context, 'Passport expiry date is required.');
+        return false;
+      }
+    }
+
     // ✅ Add traveller
     _travellers.add(TravellerInfo(
       gender: _selectedGender,
       firstName: _firstName,
       lastName: _lastName,
       dateOfBirth: _dateOfBirth!,
+      type: type,
+      passportExpiry:_passportExpiry ,
+      passportNumber: _passportNumber,
+      selectedMeal: [],
+      selectedBagg: [],
+      selectedOther: []
+
     ));
 
     resetForm();
     notifyListeners();
     return true;
+  }
+
+  void clearTravellers() {
+    _travellers.clear();
+    notifyListeners();
   }
 
   void _showError(BuildContext context, String message) {
@@ -420,6 +451,8 @@ class BookProceedProvider extends ChangeNotifier {
     _firstName = '';
     _lastName = '';
     _dateOfBirth = null;
+    _passportNumber = '';
+    _passportExpiry = null;
   }
 
   void removeTraveller(int index) {
@@ -458,10 +491,8 @@ class BookProceedProvider extends ChangeNotifier {
     final gender = _travellers.map((t) => t.gender).toList();
     final dob = _travellers.map((t) => t.dateOfBirth.toIso8601String().split('T').first).toList();
 
-    final passportNo = _passports.map((p) => p.passportNumber).toList();
-    final passportExpiry = _passports.map((p) {
-      return DateFormat('yyyy-MM-dd').format(p.passportExpiry);
-    }).toList();
+    final passportNo = _travellers.map((t) => t.passportNumber).toList();
+    final passportExpiry = _travellers.map((t) => t.passportExpiry?.toIso8601String().split('T').first).toList();
 
     String departureDate = formatDate(searchProvider.selectedDate);
     return {
@@ -509,11 +540,10 @@ class BookProceedProvider extends ChangeNotifier {
     final dob = _travellers
         .map((t) => t.dateOfBirth.toIso8601String().split('T').first)
         .toList();
+    final passportNo = _travellers.map((t) => t.passportNumber).toList();
+    final passportExpiry = _travellers.map((t) => t.passportExpiry?.toIso8601String().split('T').first).toList();
 
-    final passportNo = _passports.map((p) => p.passportNumber).toList();
-    final passportExpiry = _passports.map((p) {
-      return DateFormat('yyyy-MM-dd').format(p.passportExpiry);
-    }).toList();
+
 
     if (searchProvider.returnDate == null) {
       throw Exception('Return date is missing');
@@ -561,15 +591,6 @@ class BookProceedProvider extends ChangeNotifier {
       throw Exception('No travellers added');
     }
 
-    if (flight.passport == true) {
-      if (_passports.length != _travellers.length) {
-        _showPassportError(
-          context,
-          'Total passports (${_passports.length}) must equal the total passenger count (${_travellers.length}).',
-        );
-        throw Exception('Passport count mismatch');
-      }
-    }
 
 
     final totalRequired = searchProvider.adultCount +
@@ -613,15 +634,7 @@ class BookProceedProvider extends ChangeNotifier {
       _showError(context, 'Please add at least one traveller.');
       throw Exception('No travellers added');
     }
-    if (onwardFlight.passport == true || returnFlight.passport == true) {
-      if (_passports.length != _travellers.length) {
-        _showPassportError(
-          context,
-          'Total passports (${_passports.length}) must equal the total passenger count (${_travellers.length}).',
-        );
-        throw Exception('Passport count mismatch');
-      }
-    }
+
 
     final totalRequired = searchProvider.adultCount +
         searchProvider.childCount +

@@ -1034,6 +1034,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           country: 'India',
         ),
       );
+
+      provider.setTripIndex(0);
+      tabController.animateTo(0);
     });
   }
 
@@ -1162,17 +1165,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     style: kTextStyle.copyWith(
                         color: kWhite, fontWeight: FontWeight.bold),),
                 ),
-                trailing: GestureDetector(
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.notification),
-                  child: const CircleAvatar(
-                    backgroundColor: Colors.transparent,
-                    child: Icon(
-                      FeatherIcons.bell,
-                      color: kWhite,
-                    ),
-                  ),
-                ),
+                // trailing: GestureDetector(
+                //   onTap: () =>
+                //       Navigator.pushNamed(context, AppRoutes.notification),
+                //   child: const CircleAvatar(
+                //     backgroundColor: Colors.transparent,
+                //     child: Icon(
+                //       FeatherIcons.bell,
+                //       color: kWhite,
+                //     ),
+                //   ),
+                // ),
               ),
               Text(
                 lang.S
@@ -1519,10 +1522,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if(provider.selectedTripIndex == 0){
           final filterProvider = context.read<FilterProvider>();
           final countryProvider = context.read<CountryProvider>();
+          filterProvider.resetFilters();
           success = await provider.searchFlight(filterProvider: filterProvider, countryProvider: countryProvider);
         }else{
           final filterProvider = context.read<FilterProvider>();
           final countryProvider = context.read<CountryProvider>();
+          filterProvider.resetFilters();
           success = await provider.searchRoundTripFlight(initialLoad: true, filterProvider: filterProvider, countryProvider: countryProvider);
         }
 

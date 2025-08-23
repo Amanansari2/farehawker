@@ -123,27 +123,6 @@ class _FilterState extends State<Filter> {
                       // final filterProvider = context.read<FilterProvider>();
                       final countryProvider = context.read<CountryProvider>();
 
-                      final bool noStopSelected = filter.selectedStopOption == null;
-                      final bool noRefundableSelected = filter.selectedRefundableOptions == null;
-                      final bool noDepartureSelected = filter.selectedDepartureTime == null;
-                      final bool noAirlineSelected = filter.selectedAirlines.isEmpty;
-                      final bool noClassOptionSelected = filter.selectedClassOptions == null;
-
-                      if (noStopSelected && noRefundableSelected && noDepartureSelected && noAirlineSelected && noClassOptionSelected) {
-                      if(!mounted) return;
-                        showDialog(
-                          context: context,
-                          builder: (_) => CustomDialogBox(
-                            title: 'Validation',
-                            descriptions: 'Please select at least one filter before applying.',
-                            text: 'OK',
-                            titleColor: kRedColor,
-                            img: 'images/dialog_error.png',
-                            functionCall: () => Navigator.of(context).pop(),
-                          ),
-                        );
-                        return;
-                      }
 
                       bool success;
                       searchProvider.setFilterParams(filter);

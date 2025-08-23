@@ -11,7 +11,11 @@ import 'package:provider/provider.dart';
 import '../../api_services/configs/app_configs.dart';
 import '../../models/airline_list_model.dart';
 import '../../models/airport_list_model.dart';
+import '../../models/booking_model/booking_post_model.dart';
+import '../../models/pricing_rules_model/pricing_response_model.dart';
 import '../../providers/country_provider.dart';
+import '../../providers/fare_rule_provider.dart';
+import '../../providers/pricing_request _provider.dart';
 import '../../providers/search_flight_provider.dart';
 import '../../widgets/button_global.dart';
 import '../../widgets/constant.dart';
@@ -109,39 +113,43 @@ class _PaymentState extends State<Payment> {
                     borderRadius: BorderRadius.circular(30.0),
                   ),
 
-                  onPressed: () async {
-                    final traceId = widget.onwardFlight.traceID;
-                    final amount = getTotalFare().toStringAsFixed(2);
+                  // onPressed: () async {
+                  //   final traceId = widget.onwardFlight.traceID;
+                  //   final amount = getTotalFare().toStringAsFixed(2);
+                  //
+                  //   final result = await Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (_) => PaymentMethod(
+                  //         amount: amount,
+                  //         orderId: traceId,
+                  //       ),
+                  //     ),
+                  //   );
+                  //
+                  //   if (result != null && result is Map) {
+                  //     final status = result['status'];
+                  //
+                  //     if (status == 'success') {
+                  //       showSuccessPopup(context);
+                  //     } else {
+                  //       showDialog(
+                  //         context: context,
+                  //         builder: (_) => CustomDialogBox(
+                  //           title: 'Payment Failed',
+                  //           descriptions: "",
+                  //           text: 'Ok',
+                  //           img: 'images/dialog_error.png',
+                  //           titleColor: kRedColor,
+                  //           functionCall: () => Navigator.of(context).pop(),
+                  //         ),
+                  //       );
+                  //     }
+                  //   }
+                  // },
 
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PaymentMethod(
-                          amount: amount,
-                          orderId: traceId,
-                        ),
-                      ),
-                    );
-
-                    if (result != null && result is Map) {
-                      final status = result['status'];
-
-                      if (status == 'success') {
-                        showSuccessPopup(context);
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (_) => CustomDialogBox(
-                            title: 'Payment Failed',
-                            descriptions: "",
-                            text: 'Ok',
-                            img: 'images/dialog_error.png',
-                            titleColor: kRedColor,
-                            functionCall: () => Navigator.of(context).pop(),
-                          ),
-                        );
-                      }
-                    }
+                  onPressed: () {
+                    showSuccessPopup(context);
                   },
 
                   buttonTextColor: kWhite,
@@ -198,6 +206,7 @@ class _PaymentState extends State<Payment> {
               children: [
                 const Divider(height: 1, thickness: 1.0, color: kBorderColorTextField),
                 _buildFlightTile(widget.returnFlight!),
+
               ],
             ),
           const SizedBox(height: 10.0),
@@ -411,10 +420,15 @@ class _PaymentState extends State<Payment> {
           ],
 
           const Divider(height: 24, thickness: 1.0),
+
+
         ],
       ],
     );
   }
+
+
+
 
   Widget _fareRow(String label, double fare) {
     return Padding(
@@ -490,7 +504,7 @@ class _PaymentState extends State<Payment> {
                 GestureDetector(
                   onTap: () {
                     finish(context);
-                    const Home().launch(context);
+                     Home().launch(context);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

@@ -1203,43 +1203,47 @@ class _FlightDetailsState extends State<FlightDetails> {
         trailing: SizedBox(
           height: 80,
           width: 200,
-          child: ButtonGlobalWithoutIcon(
-            buttontext: 'Proceed to Book',
-            buttonDecoration: kButtonDecoration.copyWith(
-              color: kPrimaryColor,
-              borderRadius: BorderRadius.circular(30.0),
-            ),
-            onPressed: () async {
-              final fareProvider = context.read<BookProceedProvider>();
+          child: Consumer<BookProceedProvider>(
+            builder: (context, fareProvider, _) {
+              return ButtonGlobalWithoutIcon(
+                buttontext: fareProvider.isLoading ? "Please wait..." :'Proceed to Book',
+                buttonDecoration: kButtonDecoration.copyWith(
+                  color: kPrimaryColor,
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                onPressed: fareProvider.isLoading
+                    ? null
+                    : () async {
+                  await fareProvider.loadFareRulesForFlight(widget.flight);
 
-              await fareProvider.loadFareRulesForFlight(widget.flight);
-
-              if (fareProvider.error != null) {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return CustomDialogBox(
-                      title: "Error",
-                      descriptions: fareProvider.error,
-                      text: "Close",
-                      titleColor: kRedColor,
-                      img: 'images/dialog_error.png',
-                      functionCall: () {
-                        Navigator.of(context).pop(); // close dialog
+                  if (fareProvider.error != null) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return CustomDialogBox(
+                          title: "Error",
+                          descriptions: fareProvider.error,
+                          text: "Close",
+                          titleColor: kRedColor,
+                          img: 'images/dialog_error.png',
+                          functionCall: () {
+                            Navigator.of(context).pop(); // close dialog
+                          },
+                        );
                       },
                     );
-                  },
-                );
-              } else {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.bookProceed,
-                  arguments: widget.flight
-                );
-              }
-            },
+                  } else {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.bookProceed,
+                      arguments: widget.flight
+                    );
+                  }
+                },
 
-            buttonTextColor: kWhite,
+                buttonTextColor: kWhite,
+              );
+            }
           ),
         ),
       ),);

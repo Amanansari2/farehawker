@@ -49,7 +49,7 @@ class _MyBookingState extends State<MyBooking> {
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 4,
+                itemCount: 1,
                 itemBuilder: (_, i) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 10.0),
@@ -69,13 +69,13 @@ class _MyBookingState extends State<MyBooking> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Paid: \₹14500.',
-                                    style: kTextStyle.copyWith(
-                                      fontSize: 14,
-                                      color: kTitleColor,
-                                    ),
-                                  ),
+                                  // Text(
+                                  //   'Paid: \₹14500.',
+                                  //   style: kTextStyle.copyWith(
+                                  //     fontSize: 14,
+                                  //     color: kTitleColor,
+                                  //   ),
+                                  // ),
                                   const SizedBox(
                                     height: 5,
                                   ),
@@ -111,33 +111,39 @@ class _MyBookingState extends State<MyBooking> {
                             contentPadding: EdgeInsets.zero,
                             minLeadingWidth: 0,
                             leading: Container(
-                              height: 34.0,
-                              width: 34.0,
+                              height: 44.0,
+                              width: 44.0,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                image: DecorationImage(image: AssetImage('images/indigo.png'), fit: BoxFit.cover),
+                                image: DecorationImage(image: AssetImage('images/logo/AF.png'), fit: BoxFit.cover),
                               ),
                             ),
-                            title: Row(
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Dhaka',
-                                  style: kTextStyle.copyWith(color: kTitleColor),
+                                Text("Air France", style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 16),),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'BOM',
+                                      style: kTextStyle.copyWith(color: kTitleColor),
+                                    ),
+                                    const SizedBox(width: 2.0),
+                                    const Icon(
+                                      Icons.swap_horiz,
+                                      color: kLightNeutralColor,
+                                    ),
+                                    const SizedBox(width: 2.0),
+                                    Text(
+                                      'Yow',
+                                      style: kTextStyle.copyWith(fontSize: 14, color: kTitleColor),
+                                    )
+                                  ],
                                 ),
-                                const SizedBox(width: 2.0),
-                                const Icon(
-                                  Icons.swap_horiz,
-                                  color: kLightNeutralColor,
-                                ),
-                                const SizedBox(width: 2.0),
-                                Text(
-                                  'New Delhi',
-                                  style: kTextStyle.copyWith(fontSize: 14, color: kTitleColor),
-                                )
                               ],
                             ),
                             subtitle: Text(
-                              'Thu, 6 Jan |  11:40pm - 05:25pm | 5h 25m | 1 Stop',
+                              'Fri, 25 Jul 01:20  -  Fri, 25 Jul 15:05 | 17h 25m | 1 Stop',
                               style: kTextStyle.copyWith(fontSize: 12, color: kSubTitleColor),
                             ),
                           ),
@@ -149,7 +155,7 @@ class _MyBookingState extends State<MyBooking> {
                             color: kBorderColorTextField,
                           ),
                           const Text(
-                            'Shaidul Islam (Male)',
+                            'Ms. Aayat Sayed (Female)',
                             style: TextStyle(fontSize: 12, color: kTitleColor),
                           ),
                         ],
