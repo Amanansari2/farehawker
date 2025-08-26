@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flightbooking/screen/home/home.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
@@ -28,6 +29,16 @@ class _TicketStatusState extends State<TicketStatus> {
         backgroundColor: kBlueColor,
         title: Text(lang.S.of(context).ticketStatusTitle, style: const TextStyle(color: kWhite),),
         iconTheme: const IconThemeData(color: kWhite),
+        leading: IconButton(
+            onPressed: (){
+              // finish(context);
+              // Home().launch(context);
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) =>  Home()),
+                    (Route<dynamic> route) => false,
+              );
+
+            }, icon: const Icon(Icons.arrow_back)),
       ),
       // bottomNavigationBar: Container(
       //   decoration: const BoxDecoration(color: kDarkWhite),
@@ -1151,116 +1162,116 @@ class _TicketStatusState extends State<TicketStatus> {
                     ],
                   ),
                   const SizedBox(height: 10.0),
-                  Container(
-                    width: context.width(),
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), border: Border.all(color: kBorderColorTextField)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Terms & Conditions',
-                          style: kTextStyle.copyWith(
-                            color: kTitleColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10.0),
-                        Row(
-                          children: [
-                             Icon(
-                              MdiIcons.circleMedium,
-                              color: kSubTitleColor,
-                            ),
-                            Expanded(
-                              child: Text(
-                                'Lorem ipsum dolor sit amet consectetur. Quisque',
-                                style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              MdiIcons.circleMedium,
-                              color: kSubTitleColor,
-                            ),
-                            Expanded(
-                              child: Text(
-                                ' nulla bibendum nibh augue porta consequat.',
-                                style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          children: [
-                             Icon(
-                              MdiIcons.circleMedium,
-                              color: kSubTitleColor,
-                            ),
-                            Expanded(
-                              child: Text(
-                                'Aliquet nam arcu potenti congue risus quam.',
-                                style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          children: [
-                             Icon(
-                              MdiIcons.circleMedium,
-                              color: kSubTitleColor,
-                            ),
-                            Expanded(
-                              child: Text(
-                                'enim blandit in eget quam magna donec magna\n scelerisque. Interdum sed in convallis',
-                                style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
-                                textAlign: TextAlign.start,
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                             Icon(
-                              MdiIcons.circleMedium,
-                              color: kSubTitleColor,
-                            ),
-                            Expanded(
-                              child: Text(
-                                'varius sapien ullamcorper posuere. Sem tortor\n eros volutpat pulvinar. Platea suspendisse ut\n condimen tum felis. Duis amet lobortis\n lacus nibh ',
-                                style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
-                                maxLines: 4,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Container(
+                  //   width: context.width(),
+                  //   padding: const EdgeInsets.all(8.0),
+                  //   decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0), border: Border.all(color: kBorderColorTextField)),
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     mainAxisAlignment: MainAxisAlignment.start,
+                  //     children: [
+                  //       Text(
+                  //         'Terms & Conditions',
+                  //         style: kTextStyle.copyWith(
+                  //           color: kTitleColor,
+                  //           fontWeight: FontWeight.bold,
+                  //         ),
+                  //       ),
+                  //       const SizedBox(height: 10.0),
+                  //       Row(
+                  //         children: [
+                  //            Icon(
+                  //             MdiIcons.circleMedium,
+                  //             color: kSubTitleColor,
+                  //           ),
+                  //           Expanded(
+                  //             child: Text(
+                  //               'Lorem ipsum dolor sit amet consectetur. Quisque',
+                  //               style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                  //             ),
+                  //           )
+                  //         ],
+                  //       ),
+                  //       const SizedBox(
+                  //         height: 10,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Icon(
+                  //             MdiIcons.circleMedium,
+                  //             color: kSubTitleColor,
+                  //           ),
+                  //           Expanded(
+                  //             child: Text(
+                  //               ' nulla bibendum nibh augue porta consequat.',
+                  //               style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                  //             ),
+                  //           ),
+                  //         ],
+                  //       ),
+                  //       const SizedBox(
+                  //         height: 10,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //            Icon(
+                  //             MdiIcons.circleMedium,
+                  //             color: kSubTitleColor,
+                  //           ),
+                  //           Expanded(
+                  //             child: Text(
+                  //               'Aliquet nam arcu potenti congue risus quam.',
+                  //               style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                  //             ),
+                  //           )
+                  //         ],
+                  //       ),
+                  //       const SizedBox(
+                  //         height: 10,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //            Icon(
+                  //             MdiIcons.circleMedium,
+                  //             color: kSubTitleColor,
+                  //           ),
+                  //           Expanded(
+                  //             child: Text(
+                  //               'enim blandit in eget quam magna donec magna\n scelerisque. Interdum sed in convallis',
+                  //               style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                  //               textAlign: TextAlign.start,
+                  //             ),
+                  //           )
+                  //         ],
+                  //       ),
+                  //       const SizedBox(
+                  //         height: 10,
+                  //       ),
+                  //       Row(
+                  //         mainAxisAlignment: MainAxisAlignment.start,
+                  //         crossAxisAlignment: CrossAxisAlignment.start,
+                  //         mainAxisSize: MainAxisSize.min,
+                  //         children: [
+                  //            Icon(
+                  //             MdiIcons.circleMedium,
+                  //             color: kSubTitleColor,
+                  //           ),
+                  //           Expanded(
+                  //             child: Text(
+                  //               'varius sapien ullamcorper posuere. Sem tortor\n eros volutpat pulvinar. Platea suspendisse ut\n condimen tum felis. Duis amet lobortis\n lacus nibh ',
+                  //               style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 12),
+                  //               maxLines: 4,
+                  //               overflow: TextOverflow.ellipsis,
+                  //             ),
+                  //           )
+                  //         ],
+                  //       ),
+                  //       const SizedBox(
+                  //         height: 10,
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
             ),

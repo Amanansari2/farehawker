@@ -42,7 +42,7 @@ class SignUp extends StatelessWidget {
                 ],
               ),
             ),
-            bottomNavigationBar: _buildBottomNavigationBar(),
+            bottomNavigationBar: _buildBottomNavigationBar(context),
           );
         },
       ),
@@ -275,13 +275,19 @@ class SignUp extends StatelessWidget {
   }
 
 
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar(BuildContext context) {
     return SizedBox(
       height: 50,
       child: Container(
         decoration: const BoxDecoration(color: kWhite),
         child: GestureDetector(
-          onTap: () => const LogIn(),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LogIn())
+
+            );
+          } ,
           child: Center(
             child: RichText(
               text: TextSpan(

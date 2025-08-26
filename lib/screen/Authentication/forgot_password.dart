@@ -26,6 +26,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             appBar: AppBar(
               elevation: 0,
               backgroundColor: kBlueColor,
+              iconTheme: const IconThemeData(color: kWhite),
               centerTitle: true,
               title: Text(lang.S.of(context).fpAppBarTitle, style: kTextStyle.copyWith(color: kWhite, fontSize: 25, fontWeight: FontWeight.bold),),
             ),

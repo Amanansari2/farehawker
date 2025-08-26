@@ -1099,12 +1099,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   context, provider)),
 
                               const SizedBox(height: 50),
-                              GestureDetector(
-                                onTap: (){
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const TestShimmerScreen()));
-                                },
-                                child: const Text("Testing Shimmer ", style: TextStyle(fontSize: 25),),
-                              )
+                              // GestureDetector(
+                              //   onTap: (){
+                              //     Navigator.push(context, MaterialPageRoute(builder: (_) => const TestShimmerScreen()));
+                              //   },
+                              //   child: const Text("Testing Shimmer ", style: TextStyle(fontSize: 25),),
+                              // )
                             ],
                           ),
                         ),

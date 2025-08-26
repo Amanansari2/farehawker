@@ -503,8 +503,12 @@ class _PaymentState extends State<Payment> {
                 const SizedBox(height: 20.0),
                 GestureDetector(
                   onTap: () {
-                    finish(context);
-                     Home().launch(context);
+                    // finish(context);
+                    //  Home().launch(context);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) =>  Home()),
+                          (Route<dynamic> route) => false,
+                    );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

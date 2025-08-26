@@ -28,6 +28,7 @@ class _LogInState extends State<LogIn> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: kBlueColor,
+        iconTheme: const IconThemeData(color: kWhite),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),

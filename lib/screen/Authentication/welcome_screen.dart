@@ -82,18 +82,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       const SizedBox(height: 20.0),
                       Text(
                         lang.S.of(context).wcTitle,
-                        style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 18.0),
+                        style: kTextStyle.copyWith(color: kTitleColor, fontWeight: FontWeight.bold, fontSize: 20.0),
                       ),
                       const SizedBox(height: 5.0),
                       Text(
-                        lang.S.of(context).wcSubTitle,
-                        style: kTextStyle.copyWith(color: kPrimaryColor, fontWeight: FontWeight.bold, fontSize: 18.0),
+                        "FareHawker",
+                        style: kTextStyle.copyWith(color: kPrimaryColor, fontWeight: FontWeight.bold, fontSize: 22.0),
                       ),
                       const SizedBox(height: 20.0),
                       Text(
-                        lang.S.of(context).wcDescription,
+                        "Welcome to FareHawker, your go-to platform \nfor seamless flight bookings. \nWhether you're planning a vacation, business trip, \nor a spontaneous getaway, we make it easier to \nfind the best deals for group bookings, charter services, and travel arrangements.",
                         textAlign: TextAlign.center,
-                        style: kTextStyle.copyWith(color: kSubTitleColor),
+                        style: kTextStyle.copyWith(color: kSubTitleColor, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 50.0),
                       ButtonGlobalWithoutIcon(

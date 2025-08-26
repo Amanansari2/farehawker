@@ -501,7 +501,7 @@ class _FlightDetailsState extends State<RoundTripFlightDetails> with SingleTicke
         ),
         trailing: SizedBox(
           height: 80,
-          width: 200,
+          width: 225,
           child: Consumer<BookProceedProvider>(
             builder: (context, fareProvider, _) {
               return ButtonGlobalWithoutIcon(
